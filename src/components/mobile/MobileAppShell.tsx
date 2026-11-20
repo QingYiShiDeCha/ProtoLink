@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Cable, FileCode, SlidersHorizontal, TerminalSquare } from 'lucide-react';
+import { TabBar } from 'antd-mobile';
 import type {
   BleConfig,
   ChecksumType,
@@ -233,44 +234,25 @@ export function MobileAppShell({
           )}
         </main>
 
-        {/* Anchored Native Bottom Tab Bar (64px) */}
-        <nav
-          aria-label="应用主导航"
-          className="min-h-16 shrink-0 safe-bottom grid grid-cols-4 items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40"
-        >
-          {TAB_ITEMS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => onChangeTab(tab.id)}
-                aria-current={isActive ? 'page' : undefined}
-                className={`min-h-[48px] h-full flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
-                  isActive
-                    ? 'text-teal-600 dark:text-teal-400'
-                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
-              >
-                <span
-                  className={`inline-flex items-center justify-center transition-colors ${
-                    state.platform === 'android'
-                      ? `px-4 py-0.5 rounded-full ${
-                          isActive ? 'bg-teal-600/15 dark:bg-teal-400/20' : ''
-                        }`
-                      : ''
-                  }`}
-                >
-                  <Icon className="w-[20px] h-[20px]" />
-                </span>
-                <span className="text-[11px] font-medium tracking-tight leading-none whitespace-nowrap">
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* 底部导航：antd-mobile TabBar */}
+        <div className="shrink-0 safe-bottom bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40">
+          <TabBar
+            activeKey={activeTab}
+            onChange={(key) => onChangeTab(key as TabRoute)}
+            safeArea={false}
+          >
+            {TAB_ITEMS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabBar.Item
+                  key={tab.id}
+                  title={tab.label}
+                  icon={<Icon className="w-[20px] h-[20px]" />}
+                />
+              );
+            })}
+          </TabBar>
+        </div>
 
         {/* iOS Home Indicator / Android Gesture Pill inside Device Frame (md+) */}
         <div

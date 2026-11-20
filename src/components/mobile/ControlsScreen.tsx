@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Card, Input, Switch } from '../../ui';
+import { Popup } from 'antd-mobile';
 import {
   Activity,
   ArrowDown,
@@ -745,11 +746,16 @@ export function ControlsScreen({
 
       {/* Add / Edit Hardware Widget Bottom Sheet */}
       {sheetOpen && (
-        <div
-          className="absolute inset-0 z-50 bg-slate-950/55 flex flex-col justify-end"
-          role="dialog"
-          aria-modal="true"
-          aria-label={editingId ? '编辑硬件交互控件' : '添加硬件交互控件'}
+        <Popup
+          visible
+          position="bottom"
+          onMaskClick={() => setSheetOpen(false)}
+          bodyStyle={{
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            maxHeight: '92%',
+            overflow: 'hidden',
+          }}
         >
           <form
             onSubmit={handleSubmit}
@@ -1056,7 +1062,7 @@ export function ControlsScreen({
               </Button>
             </div>
           </form>
-        </div>
+        </Popup>
       )}
     </div>
   );

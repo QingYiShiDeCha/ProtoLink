@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import mqtt, { type MqttClient } from 'mqtt';
+import { Popup } from 'antd-mobile';
 import { Button } from './ui';
 import { Moon, Smartphone, Sun, X } from 'lucide-react';
 import type {
@@ -121,6 +122,12 @@ export default function App() {
   const liveBleCharRef = useRef<WebBluetoothCharacteristicLike | null>(null);
   const nativeBleRef = useRef<NativeBleLink | null>(null);
   const isNative = isNativePlatform();
+
+  // antd-mobile 的 Popup/TabBar 会渲染到 body 的 portal 里，
+  // 落在 .dark 容器之外，所以暗色 class 必须挂到 documentElement 上。
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', state.darkMode);
+  }, [state.darkMode]);
   const liveWsRef = useRef<WebSocket | null>(null);
   const liveMqttRef = useRef<MqttClient | null>(null);
   const transmitRef = useRef<
@@ -1000,36 +1007,34 @@ export default function App() {
       </div>
 
       {/* Mobile Source Code Sheet */}
-      {mobileCodeOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-50 bg-slate-950/60 flex flex-col justify-end"
-          role="dialog"
-          aria-modal="true"
-          aria-label="React Native 源码查看"
-        >
-          <div className="h-[88dvh] bg-white rounded-t-3xl flex flex-col overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-900">
-                React Native (Expo) 源码
-              </span>
-              <button
-                type="button"
-                onClick={() => setMobileCodeOpen(false)}
-                aria-label="关闭源码窗口"
-                className="min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-3">
-              <CodeExplorerPanel
-                files={rnFiles}
-                onExportBundle={handleExportBundle}
-              />
-            </div>
+      <Popup
+        visible={mobileCodeOpen}
+        position="bottom"
+        onMaskClick={() => setMobileCodeOpen(false)}
+        bodyStyle={{ padding: 0, background: 'transparent' }}
+      >
+        <div className="h-[88dvh] max-h-[88dvh] bg-white dark:bg-slate-900 rounded-t-3xl flex flex-col overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              React Native (Expo) 源码
+            </span>
+            <button
+              type="button"
+              onClick={() => setMobileCodeOpen(false)}
+              aria-label="关闭源码窗口"
+              className="min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto p-3">
+            <CodeExplorerPanel
+              files={rnFiles}
+              onExportBundle={handleExportBundle}
+            />
           </div>
         </div>
-      )}
+      </Popup>
 
       <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>

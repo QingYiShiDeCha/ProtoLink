@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Card, Input, Switch } from '../../ui';
+import { Popup } from 'antd-mobile';
 import { FileCode, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
 import type {
   ChecksumType,
@@ -302,11 +303,16 @@ export function ProtocolScreen({
 
       {/* Add / Edit Protocol Rule Sheet */}
       {sheetOpen && (
-        <div
-          className="absolute inset-0 z-50 bg-slate-950/55 flex flex-col justify-end"
-          role="dialog"
-          aria-modal="true"
-          aria-label={editingRuleId ? '编辑自定义接收协议' : '新建自定义接收协议'}
+        <Popup
+          visible
+          position="bottom"
+          onMaskClick={() => setSheetOpen(false)}
+          bodyStyle={{
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            maxHeight: '90%',
+            overflow: 'hidden',
+          }}
         >
           <form
             onSubmit={handleSaveRule}
@@ -510,7 +516,7 @@ export function ProtocolScreen({
               </Button>
             </div>
           </form>
-        </div>
+        </Popup>
       )}
     </div>
   );
