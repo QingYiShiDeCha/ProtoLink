@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@heroui/styles";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
@@ -8,7 +7,7 @@
     --font-sans: "DM Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    /* Align HeroUI v3 primary accent token with Dayflow emerald-teal */
+    /* 主色：Dayflow 青绿 */
     --accent: #0d9488;
     --accent-foreground: #ffffff;
   }
@@ -49,4 +48,49 @@
 }
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
+}
+
+/*
+ * antd-mobile 主题变量
+ * 这两个块必须留在 @layer 之外：antd-mobile 的 global.css 是无层级样式，
+ * 层级内的声明会被它压过，只有同为无层级、且写在后面的规则才能覆盖。
+ */
+:root {
+  --adm-color-primary: #0d9488;
+  --adm-radius-m: 10px;
+  --adm-radius-l: 14px;
+}
+
+.dark {
+  --adm-color-primary: #2dd4bf;
+  --adm-color-text: #e2e8f0;
+  --adm-color-background: #0f172a;
+  --adm-color-border: #334155;
+  --adm-color-fill-content: #1e293b;
+}
+
+/*
+ * antd-mobile 组件尺寸桥接
+ * antd 默认是「大字号、4px 圆角」的观感，与这套紧凑的调试界面不匹配。
+ * 这些规则必须无层级（antd 的样式无层级，只有同为无层级的后置规则能覆盖）。
+ */
+.adm-button {
+  --border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 14px;
+}
+
+.adm-button-small {
+  padding: 9px 12px;
+}
+
+.adm-input {
+  --font-size: 12px;
+}
+
+.adm-switch {
+  --width: 44px;
+  --height: 26px;
+  --border-width: 1px;
 }

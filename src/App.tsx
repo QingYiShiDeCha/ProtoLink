@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import mqtt, { type MqttClient } from 'mqtt';
-import { Button } from '@heroui/react';
+import { Button } from './ui';
 import { Moon, Smartphone, Sun, X } from 'lucide-react';
 import type {
   BleConfig,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Input, Switch } from '@heroui/react';
+import { Button, Card, Input, Switch } from '../../ui';
 import { FileCode, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
 import type {
   ChecksumType,

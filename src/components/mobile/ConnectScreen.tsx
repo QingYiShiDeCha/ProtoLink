@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Button, Card, Input, Switch } from '@heroui/react';
+import { Button, Card, Input, Switch } from '../../ui';
 import {
   Bluetooth,
   Code2,

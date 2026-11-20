@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '@heroui/react';
+import { Button } from '../../ui';
 import { Check, Copy, Download, FileCode2, FolderOpen } from 'lucide-react';
 import type { RNCodeFile } from '../../types/app';
 
