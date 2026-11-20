@@ -1,9 +1,10 @@
 name: Android APK
 
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
+  # CI 已暂停：改为仅手动触发。恢复自动构建时把下面 push 段解开即可。
+  # push:
+  #   branches: [main]
+  #   tags: ['v*']
   workflow_dispatch:
 
 concurrency:
