@@ -79,6 +79,15 @@
   font-size: 12px;
   font-weight: 500;
   padding: 10px 14px;
+  /*
+   * antd 的按钮是 inline-block，而 Tailwind preflight 把 svg 设成 display:block，
+   * 块级图标在行内盒里会强制换行，导致「图标一行、文字一行」。
+   * 改成 flex 后图标与文字同行，并按 6px 间距排开。
+   */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .adm-button-small {
