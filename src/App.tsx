@@ -512,7 +512,6 @@ export default function App() {
           err instanceof Error ? `蓝牙扫描失败：${err.message}` : '蓝牙扫描失败'
         );
         setBleScanOpen(false);
-      } finally {
         setBleScanning(false);
       }
       return;
@@ -604,6 +603,7 @@ export default function App() {
       });
       nativeBleRef.current = link;
       setBleScanOpen(false);
+      setBleScanning(false);
       setState((prev) => ({
         ...prev,
         connectionStatus: 'connected',

@@ -83,6 +83,7 @@ export function Button({
   type,
   className,
   children,
+  style: _style,
   ...rest
 }: ButtonProps) {
   const { color, fill } = mapVariant(variant);
@@ -97,7 +98,19 @@ export function Button({
       onClick={onPress ?? onClick}
       className={className}
       block={fullWidth}
-      style={isIconOnly ? { paddingInline: 0 } : undefined}
+      /*
+       * 布局必须用内联样式：antd 的 .adm-button 是 inline-block，而 Tailwind
+       * preflight 把 svg 设成 display:block，块级图标会强制换行成两行。
+       * CSS 覆盖受层叠顺序影响，内联样式的优先级不受影响，最可靠。
+       */
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        ...(isIconOnly ? { paddingInline: 0 } : null),
+        ...(_style as React.CSSProperties | undefined),
+      }}
       {...rest}
     >
       {children}
