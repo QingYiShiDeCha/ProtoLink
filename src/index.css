@@ -37,3 +37,16 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/*
+ * 安全区：Capacitor 原生壳是 edge-to-edge 的，
+ * 不加这段时顶栏会被系统状态栏和挖孔压住。
+ * env() 优先（Chromium >= 140 会给出真实值），
+ * 退回 Capacitor 注入的 --safe-area-inset-* 变量，浏览器里则为 0。
+ */
+.safe-top {
+  padding-top: env(safe-area-inset-top, var(--safe-area-inset-top, 0px));
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
+}

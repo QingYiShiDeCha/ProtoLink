@@ -150,7 +150,7 @@ export function MobileAppShell({
 
         {/* Compact Mobile Top App Bar (48px) */}
         <header
-          className={`h-12 shrink-0 px-4 flex items-center border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-30 ${
+          className={`min-h-12 shrink-0 px-4 safe-top flex items-center border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-30 ${
             state.platform === 'ios' ? 'justify-center' : 'justify-start'
           }`}
         >
@@ -236,7 +236,7 @@ export function MobileAppShell({
         {/* Anchored Native Bottom Tab Bar (64px) */}
         <nav
           aria-label="应用主导航"
-          className="h-16 shrink-0 grid grid-cols-4 items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40"
+          className="min-h-16 shrink-0 safe-bottom grid grid-cols-4 items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40"
         >
           {TAB_ITEMS.map((tab) => {
             const Icon = tab.icon;
