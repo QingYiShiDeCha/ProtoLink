@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Button, Card, Input, Switch } from '@heroui/react';
 import {
   Bluetooth,
@@ -206,7 +207,9 @@ export function ConnectScreen({
               className="flex-1 min-h-[40px] rounded-xl text-xs font-medium"
             >
               <Bluetooth className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-              <span>真机蓝牙扫描 (WebBLE)</span>
+              <span>
+                真机蓝牙扫描 ({Capacitor.isNativePlatform() ? '原生 BLE' : 'WebBLE'})
+              </span>
             </Button>
             <Button
               variant="ghost"

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import mqtt, { type MqttClient } from 'mqtt';
 import { Button } from '@heroui/react';
 import { Moon, Smartphone, Sun, X } from 'lucide-react';
@@ -34,8 +35,12 @@ import { buildExpoBundleFiles } from './utils/rnSourceBuilder';
 import { MobileAppShell } from './components/mobile/MobileAppShell';
 import { CodeExplorerPanel } from './components/studio/CodeExplorerPanel';
 import { GuideModal } from './components/studio/GuideModal';
+import { connectNativeBle, isNativePlatform, type NativeBleLink } from './native/ble';
 
 const STORAGE_KEY = 'protolink_rn_app_v2';
+
+/** 原生壳里默认跟随真实平台，浏览器里保持 android */
+const NATIVE_PLATFORM: PlatformStyle = Capacitor.getPlatform() === 'ios' ? 'ios' : 'android';
 
 interface WebBluetoothCharacteristicLike {
   writeValue: (value: BufferSource) => Promise<void>;
@@ -91,7 +96,10 @@ function loadSavedState(): ProtoLinkState {
       virtualMcu: parsed.virtualMcu
         ? { ...fallback.virtualMcu, ...parsed.virtualMcu }
         : fallback.virtualMcu,
-      platform: parsed.platform === 'android' ? 'android' : 'ios',
+      platform:
+        parsed.platform === 'android' || parsed.platform === 'ios'
+          ? parsed.platform
+          : NATIVE_PLATFORM,
       darkMode: Boolean(parsed.darkMode),
     };
   } catch {
@@ -111,6 +119,8 @@ export default function App() {
   const previewRef = useRef<HTMLDivElement>(null);
   const codeRef = useRef<HTMLDivElement>(null);
   const liveBleCharRef = useRef<WebBluetoothCharacteristicLike | null>(null);
+  const nativeBleRef = useRef<NativeBleLink | null>(null);
+  const isNative = isNativePlatform();
   const liveWsRef = useRef<WebSocket | null>(null);
   const liveMqttRef = useRef<MqttClient | null>(null);
   const transmitRef = useRef<
@@ -208,13 +218,19 @@ export default function App() {
     const timestamp = formatPacketTimestamp();
     const transport = state.activeTransport;
 
-    // Real Web Bluetooth write when connected in live BLE mode
-    if (transport === 'ble' && state.connectionMode === 'live' && liveBleCharRef.current) {
-      liveBleCharRef.current
-        .writeValue(new Uint8Array(built.bytes))
-        .catch(() => {
-          setHardwareError('Web Bluetooth 写入失败，请检查设备特征值权限');
+    // 真机写入：原生壳走 Capacitor BLE 插件，浏览器里退回 Web Bluetooth
+    if (transport === 'ble' && state.connectionMode === 'live') {
+      if (nativeBleRef.current) {
+        void nativeBleRef.current.write(built.bytes).catch(() => {
+          setHardwareError('原生蓝牙写入失败，请检查写特征值权限');
         });
+      } else if (liveBleCharRef.current) {
+        liveBleCharRef.current
+          .writeValue(new Uint8Array(built.bytes))
+          .catch(() => {
+            setHardwareError('Web Bluetooth 写入失败，请检查设备特征值权限');
+          });
+      }
     }
 
     // Real MQTT-over-WS publish when connected in live MQTT mode
@@ -329,6 +345,13 @@ export default function App() {
 
   const disconnectAllLiveLinks = () => {
     liveBleCharRef.current = null;
+    if (nativeBleRef.current) {
+      const link = nativeBleRef.current;
+      nativeBleRef.current = null;
+      void link.disconnect().catch(() => {
+        /* 断开失败不阻塞状态切换 */
+      });
+    }
     if (liveWsRef.current) {
       liveWsRef.current.close();
       liveWsRef.current = null;
@@ -457,6 +480,47 @@ export default function App() {
 
   const handleScanWebBluetooth = async () => {
     setHardwareError('');
+
+    // 原生壳：WebView 没有 navigator.bluetooth，改走 Capacitor BLE 插件
+    if (isNativePlatform()) {
+      try {
+        disconnectAllLiveLinks();
+        setState((prev) => ({ ...prev, connectionStatus: 'connecting' }));
+        const link = await connectNativeBle(state.ble, {
+          onData: (bytes, label) =>
+            ingestIncomingBytes(bytes, bytesToAscii(bytes), 'hex', 'ble', label),
+          onDisconnect: (message) => {
+            nativeBleRef.current = null;
+            setHardwareError(message);
+            setState((prev) => ({
+              ...prev,
+              connectionStatus: 'disconnected',
+              connectionMode: 'simulator',
+            }));
+          },
+        });
+        nativeBleRef.current = link;
+        setState((prev) => ({
+          ...prev,
+          connectionStatus: 'connected',
+          connectionMode: 'live',
+          ble: {
+            ...prev.ble,
+            deviceName: link.deviceLabel,
+            deviceId: link.deviceLabel,
+          },
+        }));
+      } catch (err) {
+        setState((prev) => ({ ...prev, connectionStatus: 'disconnected' }));
+        setHardwareError(
+          err instanceof Error
+            ? `蓝牙连接取消或失败：${err.message}`
+            : '蓝牙扫描已取消'
+        );
+      }
+      return;
+    }
+
     const nav = navigator as unknown as WebBluetoothNavigatorLike;
     if (!nav.bluetooth) {
       setHardwareError(
@@ -666,7 +730,7 @@ export default function App() {
   return (
     <div className="min-h-[100dvh] bg-slate-100 text-slate-900">
       {/* Studio Top Bar (3-zone contract) */}
-      <header className="hidden md:flex h-14 px-6 xl:px-8 items-center justify-between gap-8 bg-white border-b border-slate-200 sticky top-0 z-40">
+      <header className={`${isNative ? 'hidden' : 'hidden md:flex'} h-14 px-6 xl:px-8 items-center justify-between gap-8 bg-white border-b border-slate-200 sticky top-0 z-40`}>
         <a
           href="#top"
           className="text-lg font-display font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
@@ -741,7 +805,7 @@ export default function App() {
             studioView === 'code' ? 'hidden xl:flex' : 'md:flex'
           } md:flex-col md:items-center md:gap-2.5`}
         >
-          <div className="hidden md:flex w-[375px] items-center justify-between gap-2">
+          <div className={`${isNative ? 'hidden' : 'hidden md:flex'} w-[375px] items-center justify-between gap-2`}>
             <div className="flex items-center gap-1 p-1 rounded-xl bg-white border border-slate-200">
               <button
                 type="button"
@@ -792,7 +856,7 @@ export default function App() {
             </Button>
           </div>
 
-          <div className="h-[100dvh] md:w-[375px] md:h-[clamp(560px,calc(100dvh-142px),710px)] md:rounded-[40px] md:bg-slate-900 md:p-2.5 md:shadow-xl md:border md:border-slate-800 relative">
+          <div className={`h-[100dvh] ${isNative ? 'w-full' : 'md:w-[375px] md:h-[clamp(560px,calc(100dvh-142px),710px)] md:rounded-[40px] md:bg-slate-900 md:p-2.5 md:shadow-xl md:border md:border-slate-800'} relative`}>
             <div
               className={`hidden md:flex bg-slate-950 rounded-full mx-auto mb-1.5 items-center justify-center transition-all ${
                 state.platform === 'ios' ? 'w-24 h-5' : 'w-4 h-4'
@@ -910,7 +974,11 @@ export default function App() {
         <div
           ref={codeRef}
           className={`${
-            studioView === 'code' ? 'hidden md:flex' : 'hidden xl:flex'
+            isNative
+              ? 'hidden'
+              : studioView === 'code'
+                ? 'hidden md:flex'
+                : 'hidden xl:flex'
           } flex-col gap-5 min-w-0`}
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
