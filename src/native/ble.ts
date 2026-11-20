@@ -7,6 +7,12 @@ export interface BleHandlers {
   onDisconnect: (message: string) => void;
 }
 
+export interface ScannedDevice {
+  deviceId: string;
+  name: string;
+  rssi?: number | null;
+}
+
 export interface NativeBleLink {
   deviceLabel: string;
   write: (bytes: number[]) => Promise<void>;
@@ -19,29 +25,80 @@ export const isNativePlatform = (): boolean => Capacitor.isNativePlatform();
 const normalizeUuid = (uuid: string): string => uuid.trim().toLowerCase();
 
 /**
- * 走原生 BLE 栈连接设备。
- * 与 Web Bluetooth 的差别：没有浏览器的设备选择器，改由 Android 系统弹窗选择；
- * 通知流通过 startNotifications 回调直接推给调用方。
+ * 开始扫描附近的 BLE 设备。
+ * 不用插件自带的 requestDevice，是因为它会弹出 Android 原生的设备选择框，
+ * 与 App 的界面体系完全脱节。这里只取扫描结果，列表由界面自己渲染。
  */
-export async function connectNativeBle(
+export async function startNativeBleScan(
+  config: BleConfig,
+  onUpdate: (devices: ScannedDevice[]) => void
+): Promise<void> {
+  const service = normalizeUuid(config.serviceUuid);
+  const notifyChar = normalizeUuid(config.notifyUuid);
+
+  // initialize 会一并申请 BLUETOOTH_SCAN / BLUETOOTH_CONNECT 运行时权限
+  await BleClient.initialize({ androidNeverForLocation: true });
+  if (!(await BleClient.isEnabled())) {
+    await BleClient.enable();
+  }
+
+  await BleClient.stopLEScan().catch(() => {
+    /* 上一轮扫描可能已经停了 */
+  });
+
+  const seen = new Map<string, ScannedDevice>();
+  let lastEmit = 0;
+
+  await BleClient.requestLEScan(
+    { optionalServices: Array.from(new Set([service, notifyChar])) },
+    (result) => {
+      const deviceId = result.device.deviceId;
+      if (!deviceId) return;
+
+      const name = (result.localName || result.device.name || '').trim();
+      const prev = seen.get(deviceId);
+
+      if (!prev) {
+        seen.set(deviceId, {
+          deviceId,
+          name,
+          rssi: typeof result.rssi === 'number' ? result.rssi : null,
+        });
+      } else {
+        if (name && !prev.name) prev.name = name;
+        if (typeof result.rssi === 'number') prev.rssi = result.rssi;
+      }
+
+      // 设备列表频繁刷新会拖垮渲染，最多每 400ms 推一次
+      const now = Date.now();
+      if (now - lastEmit > 400) {
+        lastEmit = now;
+        onUpdate(Array.from(seen.values()).sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999)));
+      }
+    }
+  );
+
+  // 收尾再推一次，确保最后扫到的设备能显示
+  setTimeout(() => {
+    onUpdate(Array.from(seen.values()).sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999)));
+  }, 1000);
+}
+
+export async function stopNativeBleScan(): Promise<void> {
+  await BleClient.stopLEScan().catch(() => {
+    /* 已经停止 */
+  });
+}
+
+/** 连接用户选中的设备。 */
+export async function connectNativeBleTo(
+  device: ScannedDevice,
   config: BleConfig,
   handlers: BleHandlers
 ): Promise<NativeBleLink> {
   const service = normalizeUuid(config.serviceUuid);
   const notifyChar = normalizeUuid(config.notifyUuid);
   const writeChar = normalizeUuid(config.writeUuid);
-
-  await BleClient.initialize({ androidNeverForLocation: true });
-
-  if (!(await BleClient.isEnabled())) {
-    await BleClient.enable();
-  }
-
-  // 只给出 optionalServices：不少透传模块广播里不带 service UUID，
-  // 用 services 过滤会把它们挡在选择列表外。
-  const device = await BleClient.requestDevice({
-    optionalServices: Array.from(new Set([service, notifyChar])),
-  });
 
   const deviceId = device.deviceId;
   const label = device.name || deviceId;

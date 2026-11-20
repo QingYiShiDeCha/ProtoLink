@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Button, Card, Input, Switch } from '../../ui';
+import { Segmented } from 'antd-mobile';
 import {
   Bluetooth,
   Code2,
@@ -506,32 +507,14 @@ export function ConnectScreen({
           <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
             系统导航风格
           </span>
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-            <Button
-              size="sm"
-              variant={platform === 'ios' ? 'secondary' : 'ghost'}
-              onPress={() => onChangePlatform('ios')}
-              className={`min-h-[32px] px-2.5 rounded-lg text-xs font-medium whitespace-nowrap ${
-                platform === 'ios'
-                  ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                  : ''
-              }`}
-            >
-              iOS
-            </Button>
-            <Button
-              size="sm"
-              variant={platform === 'android' ? 'secondary' : 'ghost'}
-              onPress={() => onChangePlatform('android')}
-              className={`min-h-[32px] px-2.5 rounded-lg text-xs font-medium whitespace-nowrap ${
-                platform === 'android'
-                  ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                  : ''
-              }`}
-            >
-              Android
-            </Button>
-          </div>
+          <Segmented
+            options={[
+              { label: 'iOS', value: 'ios' },
+              { label: 'Android', value: 'android' },
+            ]}
+            value={platform}
+            onChange={(value) => onChangePlatform(value as PlatformStyle)}
+          />
         </div>
       </Card>
 

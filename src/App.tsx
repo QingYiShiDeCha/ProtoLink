@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import mqtt, { type MqttClient } from 'mqtt';
-import { Popup } from 'antd-mobile';
+import { List, Popup, Segmented } from 'antd-mobile';
 import { Button } from './ui';
 import { Moon, Smartphone, Sun, X } from 'lucide-react';
 import type {
@@ -36,7 +36,14 @@ import { buildExpoBundleFiles } from './utils/rnSourceBuilder';
 import { MobileAppShell } from './components/mobile/MobileAppShell';
 import { CodeExplorerPanel } from './components/studio/CodeExplorerPanel';
 import { GuideModal } from './components/studio/GuideModal';
-import { connectNativeBle, isNativePlatform, type NativeBleLink } from './native/ble';
+import {
+  connectNativeBleTo,
+  isNativePlatform,
+  startNativeBleScan,
+  stopNativeBleScan,
+  type NativeBleLink,
+  type ScannedDevice,
+} from './native/ble';
 
 const STORAGE_KEY = 'protolink_rn_app_v2';
 
@@ -122,6 +129,10 @@ export default function App() {
   const liveBleCharRef = useRef<WebBluetoothCharacteristicLike | null>(null);
   const nativeBleRef = useRef<NativeBleLink | null>(null);
   const isNative = isNativePlatform();
+  const [bleScanOpen, setBleScanOpen] = useState(false);
+  const [bleDevices, setBleDevices] = useState<ScannedDevice[]>([]);
+  const [bleScanning, setBleScanning] = useState(false);
+  const [blePicking, setBlePicking] = useState(false);
 
   // antd-mobile 的 Popup/TabBar 会渲染到 body 的 portal 里，
   // 落在 .dark 容器之外，所以暗色 class 必须挂到 documentElement 上。
@@ -488,42 +499,21 @@ export default function App() {
   const handleScanWebBluetooth = async () => {
     setHardwareError('');
 
-    // 原生壳：WebView 没有 navigator.bluetooth，改走 Capacitor BLE 插件
+    // 原生壳：WebView 没有 navigator.bluetooth，改走 Capacitor BLE 插件，
+    // 并且用 App 自己的设备列表，而不是 Android 原生的选择框
     if (isNativePlatform()) {
+      setBleDevices([]);
+      setBleScanOpen(true);
+      setBleScanning(true);
       try {
-        disconnectAllLiveLinks();
-        setState((prev) => ({ ...prev, connectionStatus: 'connecting' }));
-        const link = await connectNativeBle(state.ble, {
-          onData: (bytes, label) =>
-            ingestIncomingBytes(bytes, bytesToAscii(bytes), 'hex', 'ble', label),
-          onDisconnect: (message) => {
-            nativeBleRef.current = null;
-            setHardwareError(message);
-            setState((prev) => ({
-              ...prev,
-              connectionStatus: 'disconnected',
-              connectionMode: 'simulator',
-            }));
-          },
-        });
-        nativeBleRef.current = link;
-        setState((prev) => ({
-          ...prev,
-          connectionStatus: 'connected',
-          connectionMode: 'live',
-          ble: {
-            ...prev.ble,
-            deviceName: link.deviceLabel,
-            deviceId: link.deviceLabel,
-          },
-        }));
+        await startNativeBleScan(state.ble, (devices) => setBleDevices(devices));
       } catch (err) {
-        setState((prev) => ({ ...prev, connectionStatus: 'disconnected' }));
         setHardwareError(
-          err instanceof Error
-            ? `蓝牙连接取消或失败：${err.message}`
-            : '蓝牙扫描已取消'
+          err instanceof Error ? `蓝牙扫描失败：${err.message}` : '蓝牙扫描失败'
         );
+        setBleScanOpen(false);
+      } finally {
+        setBleScanning(false);
       }
       return;
     }
@@ -582,6 +572,55 @@ export default function App() {
       setHardwareError(
         err instanceof Error ? `蓝牙连接取消或失败：${err.message}` : '蓝牙扫描已取消'
       );
+    }
+  };
+
+  const closeBleScan = () => {
+    setBleScanOpen(false);
+    setBleScanning(false);
+    void stopNativeBleScan();
+  };
+
+  const handlePickBleDevice = async (device: ScannedDevice) => {
+    if (blePicking) return;
+    setBlePicking(true);
+    setHardwareError('');
+    try {
+      await stopNativeBleScan();
+      disconnectAllLiveLinks();
+      setState((prev) => ({ ...prev, connectionStatus: 'connecting' }));
+      const link = await connectNativeBleTo(device, state.ble, {
+        onData: (bytes, label) =>
+          ingestIncomingBytes(bytes, bytesToAscii(bytes), 'hex', 'ble', label),
+        onDisconnect: (message) => {
+          nativeBleRef.current = null;
+          setHardwareError(message);
+          setState((prev) => ({
+            ...prev,
+            connectionStatus: 'disconnected',
+            connectionMode: 'simulator',
+          }));
+        },
+      });
+      nativeBleRef.current = link;
+      setBleScanOpen(false);
+      setState((prev) => ({
+        ...prev,
+        connectionStatus: 'connected',
+        connectionMode: 'live',
+        ble: {
+          ...prev.ble,
+          deviceName: link.deviceLabel,
+          deviceId: device.deviceId,
+        },
+      }));
+    } catch (err) {
+      setState((prev) => ({ ...prev, connectionStatus: 'disconnected' }));
+      setHardwareError(
+        err instanceof Error ? `蓝牙连接失败：${err.message}` : '蓝牙连接失败'
+      );
+    } finally {
+      setBlePicking(false);
     }
   };
 
@@ -813,32 +852,16 @@ export default function App() {
           } md:flex-col md:items-center md:gap-2.5`}
         >
           <div className={`${isNative ? 'hidden' : 'hidden md:flex'} w-[375px] items-center justify-between gap-2`}>
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-white border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setState((prev) => ({ ...prev, platform: 'ios' }))}
-                className={`min-h-[34px] px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap ${
-                  state.platform === 'ios'
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>iOS 风格</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setState((prev) => ({ ...prev, platform: 'android' }))}
-                className={`min-h-[34px] px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap ${
-                  state.platform === 'android'
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Android 风格</span>
-              </button>
-            </div>
+            <Segmented
+              options={[
+                { label: 'iOS 风格', value: 'ios' },
+                { label: 'Android 风格', value: 'android' },
+              ]}
+              value={state.platform}
+              onChange={(value) =>
+                setState((prev) => ({ ...prev, platform: value as PlatformStyle }))
+              }
+            />
 
             <Button
               variant="outline"
@@ -1032,6 +1055,64 @@ export default function App() {
               files={rnFiles}
               onExportBundle={handleExportBundle}
             />
+          </div>
+        </div>
+      </Popup>
+
+      {/* BLE 设备选择面板（替代 Android 原生选择框） */}
+      <Popup
+        visible={bleScanOpen}
+        position="bottom"
+        onMaskClick={closeBleScan}
+        bodyStyle={{
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          maxHeight: '72dvh',
+          overflow: 'hidden',
+        }}
+      >
+        <div className="flex flex-col max-h-[72dvh]">
+          <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                选择蓝牙设备
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                {bleScanning
+                  ? '正在搜索附近设备…'
+                  : `已发现 ${bleDevices.length} 个设备`}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={closeBleScan}
+              aria-label="关闭设备选择"
+              className="min-w-[40px] min-h-[40px] rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-300"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="overflow-y-auto">
+            <List>
+              {bleDevices.map((device) => (
+                <List.Item
+                  key={device.deviceId}
+                  clickable
+                  onClick={() => void handlePickBleDevice(device)}
+                  description={`${device.deviceId}${
+                    typeof device.rssi === 'number' ? ` · ${device.rssi} dBm` : ''
+                  }`}
+                  extra={blePicking ? '连接中' : '连接'}
+                >
+                  {device.name || '未命名设备'}
+                </List.Item>
+              ))}
+              {bleDevices.length === 0 && (
+                <List.Item description="请确认模块已上电并处于广播状态">
+                  尚未发现设备
+                </List.Item>
+              )}
+            </List>
           </div>
         </div>
       </Popup>
