@@ -800,18 +800,20 @@ export function ControlsScreen({
       </div>
 
       {/* Add / Edit Hardware Widget Bottom Sheet */}
-      {sheetOpen && (
-        <Popup
-          visible
-          position="bottom"
-          onMaskClick={() => setSheetOpen(false)}
-          bodyStyle={{
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            maxHeight: "92%",
-            overflow: "hidden",
-          }}
-        >
+      {/* 注意：Popup 必须常驻挂载，动画依赖 visible 从 false → true 的变化；
+          若写成 {sheetOpen && <Popup visible ...>}，组件挂载时就是 true，
+          spring 直接以终点值初始化，弹窗会"闪现"没有动画 */}
+      <Popup
+        visible={sheetOpen}
+        position="bottom"
+        onMaskClick={() => setSheetOpen(false)}
+        bodyStyle={{
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          maxHeight: "92%",
+          overflow: "hidden",
+        }}
+      >
           <form
             onSubmit={handleSubmit}
             className="bg-white dark:bg-slate-900 rounded-t-3xl p-4 pb-6 flex flex-col gap-3 max-h-[92%] overflow-y-auto shadow-2xl"
@@ -1141,7 +1143,6 @@ export function ControlsScreen({
             </div>
           </form>
         </Popup>
-      )}
     </div>
   );
 }

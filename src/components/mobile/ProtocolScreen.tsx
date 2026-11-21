@@ -306,18 +306,18 @@ export function ProtocolScreen({
       </div>
 
       {/* Add / Edit Protocol Rule Sheet */}
-      {sheetOpen && (
-        <Popup
-          visible
-          position="bottom"
-          onMaskClick={() => setSheetOpen(false)}
-          bodyStyle={{
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            maxHeight: '90%',
-            overflow: 'hidden',
-          }}
-        >
+      {/* Popup 必须常驻挂载，动画依赖 visible false→true 变化，条件挂载会闪现无动画 */}
+      <Popup
+        visible={sheetOpen}
+        position="bottom"
+        onMaskClick={() => setSheetOpen(false)}
+        bodyStyle={{
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          maxHeight: '90%',
+          overflow: 'hidden',
+        }}
+      >
           <form
             onSubmit={handleSaveRule}
             className="bg-white dark:bg-slate-900 rounded-t-3xl p-4 pb-6 flex flex-col gap-3 max-h-[90%] overflow-y-auto shadow-2xl"
@@ -521,7 +521,6 @@ export function ProtocolScreen({
             </div>
           </form>
         </Popup>
-      )}
     </div>
   );
 }
