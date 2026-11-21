@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Button, Card, Input, Switch } from "../ui";
+import {
+  Button,
+  Card,
+  Input,
+  Segmented as AppSegmented,
+  Switch,
+} from "../ui";
 import { Segmented } from "antd-mobile";
 import {
   Bluetooth,
@@ -119,32 +125,41 @@ export function ConnectScreen({
   return (
     <div className="flex flex-col gap-4 px-4 pt-3 pb-6">
       {/* Transport Segmented Switcher */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800">
-        {(
-          [
-            { id: "ble", label: "蓝牙 BLE", Icon: Bluetooth },
-            { id: "mqtt", label: "MQTT", Icon: Globe },
-            { id: "tcp", label: "TCP", Icon: Network },
-          ] as const
-        ).map(({ id, label, Icon }) => {
-          const active = activeTransport === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onChangeTransport(id)}
-              className={`min-h-[40px] px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap ${
-                active
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-teal-400"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5 shrink-0" />
-              <span>{label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <AppSegmented
+        size="lg"
+        ariaLabel="协议通道切换"
+        options={[
+          {
+            value: "ble",
+            label: (
+              <>
+                <Bluetooth className="w-3.5 h-3.5 shrink-0" />
+                <span>蓝牙 BLE</span>
+              </>
+            ),
+          },
+          {
+            value: "mqtt",
+            label: (
+              <>
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span>MQTT</span>
+              </>
+            ),
+          },
+          {
+            value: "tcp",
+            label: (
+              <>
+                <Network className="w-3.5 h-3.5 shrink-0" />
+                <span>TCP</span>
+              </>
+            ),
+          },
+        ]}
+        value={activeTransport}
+        onChange={onChangeTransport}
+      />
 
       {/* Connection Status & Primary CTA Card */}
       <Card className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-none flex flex-col gap-3">
@@ -376,22 +391,17 @@ export function ConnectScreen({
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   QoS 等级
                 </span>
-                <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 min-h-[42px]">
-                  {([0, 1, 2] as const).map((q) => (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => onUpdateMqtt({ qos: q })}
-                      className={`rounded-lg text-xs font-mono font-semibold ${
-                        mqtt.qos === q
-                          ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                          : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
+                <AppSegmented
+                  size="xs"
+                  ariaLabel="QoS 等级"
+                  options={[
+                    { label: "0", value: 0 },
+                    { label: "1", value: 1 },
+                    { label: "2", value: 2 },
+                  ]}
+                  value={mqtt.qos}
+                  onChange={(q) => onUpdateMqtt({ qos: q })}
+                />
               </label>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -451,22 +461,16 @@ export function ConnectScreen({
             <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
               TCP Socket 配置
             </h2>
-            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0">
-              {(["client", "server"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => onUpdateTcp({ mode: m })}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap ${
-                    tcp.mode === m
-                      ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                      : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {m === "client" ? "Client" : "Server"}
-                </button>
-              ))}
-            </div>
+            <AppSegmented
+              compact
+              ariaLabel="TCP 工作模式"
+              options={[
+                { label: "Client", value: "client" },
+                { label: "Server", value: "server" },
+              ]}
+              value={tcp.mode}
+              onChange={(m) => onUpdateTcp({ mode: m })}
+            />
           </div>
 
           <div className="grid grid-cols-[1fr_100px] gap-2">

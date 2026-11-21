@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Card, Input, Switch } from "../ui";
+import { Button, Card, Input, Segmented, Switch } from "../ui";
 import { Popup, Space } from "antd-mobile";
 import {
   Activity,
@@ -287,22 +287,14 @@ export function ControlsScreen({
       </div>
 
       {/* Quick Active Transport Selector */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800">
-        {(["ble", "mqtt", "tcp"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => onSwitchTransport(t)}
-            className={`min-h-[36px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-              activeTransport === t
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-teal-400"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-            }`}
-          >
-            {TRANSPORT_LABELS[t]}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        options={(["ble", "mqtt", "tcp"] as const).map((t) => ({
+          label: TRANSPORT_LABELS[t],
+          value: t,
+        }))}
+        value={activeTransport}
+        onChange={onSwitchTransport}
+      />
 
       {/* Auto Polling Bar */}
       <Card className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 shadow-none flex flex-col gap-2">
@@ -814,273 +806,109 @@ export function ControlsScreen({
           overflow: "hidden",
         }}
       >
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white dark:bg-slate-900 rounded-t-3xl p-4 pb-6 flex flex-col gap-3 max-h-[92%] overflow-y-auto shadow-2xl"
-          >
-            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-teal-600" />
-                <span>{editingId ? "编辑硬件控件" : "添加自定义控制控件"}</span>
-              </h3>
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-slate-900 rounded-t-3xl p-4 pb-6 flex flex-col gap-3 max-h-[92%] overflow-y-auto shadow-2xl"
+        >
+          <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Gauge className="w-4 h-4 text-teal-600" />
+              <span>{editingId ? "编辑硬件控件" : "添加自定义控制控件"}</span>
+            </h3>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(false)}
+              aria-label="关闭添加控件弹窗"
+              className="min-w-[40px] min-h-[40px] rounded-xl flex items-center justify-center text-slate-500"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Kind Selector */}
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+            {(
+              [
+                { id: "switch", label: "开关" },
+                { id: "slider", label: "PWM/滑块" },
+                { id: "rgb", label: "RGB彩灯" },
+                { id: "dpad", label: "方向键" },
+                { id: "mode", label: "挡位模式" },
+                { id: "button", label: "指令键" },
+                { id: "telemetry", label: "状态监控" },
+              ] as const
+            ).map((item) => (
               <button
+                key={item.id}
                 type="button"
-                onClick={() => setSheetOpen(false)}
-                aria-label="关闭添加控件弹窗"
-                className="min-w-[40px] min-h-[40px] rounded-xl flex items-center justify-center text-slate-500"
+                onClick={() => setKind(item.id)}
+                className={`min-h-[34px] rounded-lg text-[11px] font-medium transition-colors whitespace-nowrap ${
+                  kind === item.id
+                    ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
               >
-                <X className="w-5 h-5" />
+                {item.label}
               </button>
-            </div>
+            ))}
+          </div>
 
-            {/* Kind Selector */}
-            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-              {(
-                [
-                  { id: "switch", label: "开关" },
-                  { id: "slider", label: "PWM/滑块" },
-                  { id: "rgb", label: "RGB彩灯" },
-                  { id: "dpad", label: "方向键" },
-                  { id: "mode", label: "挡位模式" },
-                  { id: "button", label: "指令键" },
-                  { id: "telemetry", label: "状态监控" },
-                ] as const
-              ).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setKind(item.id)}
-                  className={`min-h-[34px] rounded-lg text-[11px] font-medium transition-colors whitespace-nowrap ${
-                    kind === item.id
-                      ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                      : "text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              控件名称
+            </span>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="例如：风扇继电器 / WS2812灯带 / 机械臂云台"
+              className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-sm text-slate-900 dark:text-slate-100"
+            />
+          </label>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                控件名称
-              </span>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="例如：风扇继电器 / WS2812灯带 / 机械臂云台"
-                className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-sm text-slate-900 dark:text-slate-100"
-              />
-            </label>
-
-            {kind !== "telemetry" && (
-              <div className="grid grid-cols-2 gap-2">
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    发送格式
-                  </span>
-                  <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-                    {(["hex", "ascii", "json"] as const).map((f) => (
-                      <button
-                        key={f}
-                        type="button"
-                        onClick={() => setFormat(f)}
-                        className={`min-h-[32px] rounded-lg text-[11px] font-mono font-semibold uppercase ${
-                          format === f
-                            ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                            : "text-slate-500"
-                        }`}
-                      >
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                </label>
-
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    自动追加校验
-                  </span>
-                  <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-                    {(
-                      [
-                        { id: "none", label: "无" },
-                        { id: "sum8", label: "SUM8" },
-                        { id: "crc16", label: "CRC16" },
-                      ] as const
-                    ).map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setChecksum(c.id)}
-                        className={`min-h-[32px] rounded-lg text-[11px] font-mono font-semibold ${
-                          checksum === c.id
-                            ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                            : "text-slate-500"
-                        }`}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </label>
-              </div>
-            )}
-
-            {kind === "switch" && (
-              <div className="grid grid-cols-2 gap-2">
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    打开 (ON) 报文
-                  </span>
-                  <Input
-                    value={onPayload}
-                    onChange={(e) => setOnPayload(e.target.value)}
-                    className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    关闭 (OFF) 报文
-                  </span>
-                  <Input
-                    value={offPayload}
-                    onChange={(e) => setOffPayload(e.target.value)}
-                    className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
-                  />
-                </label>
-              </div>
-            )}
-
-            {kind === "slider" && (
-              <>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    模板（用 {"{val}"} 代表十进制，{"{hex}"} 代表单字节 HEX）
-                  </span>
-                  <Input
-                    value={sliderTemplate}
-                    onChange={(e) => setSliderTemplate(e.target.value)}
-                    className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
-                  />
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      最小值
-                    </span>
-                    <Input
-                      type="number"
-                      value={minVal}
-                      onChange={(e) => setMinVal(e.target.value)}
-                      className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      最大值
-                    </span>
-                    <Input
-                      type="number"
-                      value={maxVal}
-                      onChange={(e) => setMaxVal(e.target.value)}
-                      className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      单位
-                    </span>
-                    <Input
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value)}
-                      placeholder="%"
-                      className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
-                    />
-                  </label>
-                </div>
-              </>
-            )}
-
-            {kind === "rgb" && (
+          {kind !== "telemetry" && (
+            <div className="grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  RGB 模板（支持 {"{rh} {gh} {bh}"} 十六进制 或 {"{r},{g},{b}"}{" "}
-                  十进制）
+                  发送格式
                 </span>
-                <Input
-                  value={rgbTemplate}
-                  onChange={(e) => setRgbTemplate(e.target.value)}
-                  className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+                <Segmented
+                  size="xs"
+                  ariaLabel="发送格式"
+                  options={[
+                    { label: "HEX", value: "hex" },
+                    { label: "ASCII", value: "ascii" },
+                    { label: "JSON", value: "json" },
+                  ]}
+                  value={format}
+                  onChange={setFormat}
                 />
               </label>
-            )}
 
-            {kind === "dpad" && (
-              <div className="grid grid-cols-2 gap-2">
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500">前 (UP)</span>
-                  <Input
-                    value={dpadUp}
-                    onChange={(e) => setDpadUp(e.target.value)}
-                    className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500">后 (DOWN)</span>
-                  <Input
-                    value={dpadDown}
-                    onChange={(e) => setDpadDown(e.target.value)}
-                    className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500">左 (LEFT)</span>
-                  <Input
-                    value={dpadLeft}
-                    onChange={(e) => setDpadLeft(e.target.value)}
-                    className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500">右 (RIGHT)</span>
-                  <Input
-                    value={dpadRight}
-                    onChange={(e) => setDpadRight(e.target.value)}
-                    className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
-                  />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">
-                  <span className="text-xs text-slate-500">
-                    松手自动停止帧 (STOP)
-                  </span>
-                  <Input
-                    value={dpadStop}
-                    onChange={(e) => setDpadStop(e.target.value)}
-                    className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
-                  />
-                </label>
-              </div>
-            )}
-
-            {kind === "mode" && (
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  挡位定义（格式：名称=报文，用英文逗号分隔）
+                  自动追加校验
                 </span>
-                <Input
-                  value={modeSpec}
-                  onChange={(e) => setModeSpec(e.target.value)}
-                  className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+                <Segmented
+                  size="xs"
+                  ariaLabel="自动追加校验算法"
+                  options={[
+                    { label: "无", value: "none" },
+                    { label: "SUM8", value: "sum8" },
+                    { label: "CRC16", value: "crc16" },
+                  ]}
+                  value={checksum}
+                  onChange={setChecksum}
                 />
               </label>
-            )}
+            </div>
+          )}
 
-            {kind === "button" && (
+          {kind === "switch" && (
+            <div className="grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  下发指令内容
+                  打开 (ON) 报文
                 </span>
                 <Input
                   value={onPayload}
@@ -1088,61 +916,209 @@ export function ControlsScreen({
                   className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
                 />
               </label>
-            )}
-
-            {kind === "telemetry" && (
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  绑定自定义接收规则
-                </span>
-                <select
-                  value={boundRuleId}
-                  onChange={(e) => setBoundRuleId(e.target.value)}
-                  className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs text-slate-900 dark:text-slate-100"
-                >
-                  {rules.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} ({r.mode.toUpperCase()})
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {kind !== "telemetry" && (
-              <label className="flex flex-col gap-1">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  MQTT 独立主题（可选，留空则使用连接页默认主题）
+                  关闭 (OFF) 报文
                 </span>
                 <Input
-                  value={mqttTopic}
-                  onChange={(e) => setMqttTopic(e.target.value)}
-                  className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
+                  value={offPayload}
+                  onChange={(e) => setOffPayload(e.target.value)}
+                  className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
                 />
               </label>
-            )}
-
-            {formError && <p className="text-xs text-rose-600">{formError}</p>}
-
-            <div className="flex items-center gap-2.5 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                onPress={() => setSheetOpen(false)}
-                className="flex-1 min-h-[44px] rounded-xl text-sm font-medium"
-              >
-                取消
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                className="flex-[2] min-h-[44px] rounded-xl text-sm font-semibold"
-              >
-                {editingId ? "保存修改" : "添加到面板"}
-              </Button>
             </div>
-          </form>
-        </Popup>
+          )}
+
+          {kind === "slider" && (
+            <>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  模板（用 {"{val}"} 代表十进制，{"{hex}"} 代表单字节 HEX）
+                </span>
+                <Input
+                  value={sliderTemplate}
+                  onChange={(e) => setSliderTemplate(e.target.value)}
+                  className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
+                />
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    最小值
+                  </span>
+                  <Input
+                    type="number"
+                    value={minVal}
+                    onChange={(e) => setMinVal(e.target.value)}
+                    className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    最大值
+                  </span>
+                  <Input
+                    type="number"
+                    value={maxVal}
+                    onChange={(e) => setMaxVal(e.target.value)}
+                    className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    单位
+                  </span>
+                  <Input
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    placeholder="%"
+                    className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+                  />
+                </label>
+              </div>
+            </>
+          )}
+
+          {kind === "rgb" && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                RGB 模板（支持 {"{rh} {gh} {bh}"} 十六进制 或 {"{r},{g},{b}"}{" "}
+                十进制）
+              </span>
+              <Input
+                value={rgbTemplate}
+                onChange={(e) => setRgbTemplate(e.target.value)}
+                className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+              />
+            </label>
+          )}
+
+          {kind === "dpad" && (
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-slate-500">前 (UP)</span>
+                <Input
+                  value={dpadUp}
+                  onChange={(e) => setDpadUp(e.target.value)}
+                  className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-slate-500">后 (DOWN)</span>
+                <Input
+                  value={dpadDown}
+                  onChange={(e) => setDpadDown(e.target.value)}
+                  className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-slate-500">左 (LEFT)</span>
+                <Input
+                  value={dpadLeft}
+                  onChange={(e) => setDpadLeft(e.target.value)}
+                  className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-slate-500">右 (RIGHT)</span>
+                <Input
+                  value={dpadRight}
+                  onChange={(e) => setDpadRight(e.target.value)}
+                  className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
+                />
+              </label>
+              <label className="col-span-2 flex flex-col gap-1">
+                <span className="text-xs text-slate-500">
+                  松手自动停止帧 (STOP)
+                </span>
+                <Input
+                  value={dpadStop}
+                  onChange={(e) => setDpadStop(e.target.value)}
+                  className="min-h-[38px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 text-xs font-mono"
+                />
+              </label>
+            </div>
+          )}
+
+          {kind === "mode" && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                挡位定义（格式：名称=报文，用英文逗号分隔）
+              </span>
+              <Input
+                value={modeSpec}
+                onChange={(e) => setModeSpec(e.target.value)}
+                className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono"
+              />
+            </label>
+          )}
+
+          {kind === "button" && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                下发指令内容
+              </span>
+              <Input
+                value={onPayload}
+                onChange={(e) => setOnPayload(e.target.value)}
+                className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
+              />
+            </label>
+          )}
+
+          {kind === "telemetry" && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                绑定自定义接收规则
+              </span>
+              <select
+                value={boundRuleId}
+                onChange={(e) => setBoundRuleId(e.target.value)}
+                className="min-h-[42px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs text-slate-900 dark:text-slate-100"
+              >
+                {rules.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} ({r.mode.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {kind !== "telemetry" && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                MQTT 独立主题（可选，留空则使用连接页默认主题）
+              </span>
+              <Input
+                value={mqttTopic}
+                onChange={(e) => setMqttTopic(e.target.value)}
+                className="min-h-[40px] rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 text-xs font-mono text-slate-900 dark:text-slate-100"
+              />
+            </label>
+          )}
+
+          {formError && <p className="text-xs text-rose-600">{formError}</p>}
+
+          <div className="flex items-center gap-2.5 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              onPress={() => setSheetOpen(false)}
+              className="flex-1 min-h-[44px] rounded-xl text-sm font-medium"
+            >
+              取消
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-[2] min-h-[44px] rounded-xl text-sm font-semibold"
+            >
+              {editingId ? "保存修改" : "添加到面板"}
+            </Button>
+          </div>
+        </form>
+      </Popup>
     </div>
   );
 }

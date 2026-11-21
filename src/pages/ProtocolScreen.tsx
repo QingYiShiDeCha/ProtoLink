@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Input, Switch } from '../ui';
+import { Button, Card, Input, Segmented, Switch } from '../ui';
 import { Popup } from 'antd-mobile';
 import { FileCode, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
 import type {
@@ -338,28 +338,17 @@ export function ProtocolScreen({
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-              {(
-                [
-                  { id: 'hex', label: 'HEX 帧' },
-                  { id: 'json', label: 'JSON 字段' },
-                  { id: 'ascii', label: 'ASCII 正则' },
-                ] as const
-              ).map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMode(m.id)}
-                  className={`min-h-[36px] rounded-lg text-xs font-medium ${
-                    mode === m.id
-                      ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              size="md"
+              ariaLabel="解析模式"
+              options={[
+                { label: 'HEX 帧', value: 'hex' },
+                { label: 'JSON 字段', value: 'json' },
+                { label: 'ASCII 正则', value: 'ascii' },
+              ]}
+              value={mode}
+              onChange={setMode}
+            />
 
             <label className="flex flex-col gap-1">
               <span className="text-xs text-slate-500 dark:text-slate-400">规则名称</span>
@@ -397,42 +386,30 @@ export function ProtocolScreen({
                 <div className="grid grid-cols-3 gap-2">
                   <label className="flex flex-col gap-1">
                     <span className="text-xs text-slate-500 dark:text-slate-400">长度</span>
-                    <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-                      {([1, 2] as const).map((len) => (
-                        <button
-                          key={len}
-                          type="button"
-                          onClick={() => setByteLength(len)}
-                          className={`min-h-[30px] rounded-lg text-xs font-mono ${
-                            byteLength === len
-                              ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          {len}B
-                        </button>
-                      ))}
-                    </div>
+                    <Segmented
+                      size="xs"
+                      ariaLabel="数据字节长度"
+                      options={[
+                        { label: '1B', value: 1 },
+                        { label: '2B', value: 2 },
+                      ]}
+                      value={byteLength}
+                      onChange={setByteLength}
+                    />
                   </label>
 
                   <label className="flex flex-col gap-1">
                     <span className="text-xs text-slate-500 dark:text-slate-400">字节序</span>
-                    <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-                      {(['big', 'little'] as const).map((ed) => (
-                        <button
-                          key={ed}
-                          type="button"
-                          onClick={() => setEndian(ed)}
-                          className={`min-h-[30px] rounded-lg text-xs ${
-                            endian === ed
-                              ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          {ed === 'big' ? '大端' : '小端'}
-                        </button>
-                      ))}
-                    </div>
+                    <Segmented
+                      size="xs"
+                      ariaLabel="字节序"
+                      options={[
+                        { label: '大端', value: 'big' },
+                        { label: '小端', value: 'little' },
+                      ]}
+                      value={endian}
+                      onChange={setEndian}
+                    />
                   </label>
 
                   <label className="flex flex-col gap-1">

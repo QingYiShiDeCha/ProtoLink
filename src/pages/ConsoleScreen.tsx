@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Card, Input } from "../ui";
+import { Button, Card, Input, Segmented } from "../ui";
 import { Send, Trash2 } from "lucide-react";
 import type {
   ChecksumType,
@@ -89,29 +89,18 @@ export function ConsoleScreen({
       </div>
 
       {/* Filter Bar */}
-      <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800">
-        {(
-          [
-            { id: "all", label: "全部" },
-            { id: "tx", label: "TX" },
-            { id: "rx", label: "RX" },
-            { id: "matched", label: "已解析" },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setFilter(tab.id)}
-            className={`min-h-[34px] rounded-lg text-xs font-medium transition-colors ${
-              filter === tab.id
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-teal-400"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        size="sm"
+        ariaLabel="报文筛选"
+        options={[
+          { label: "全部", value: "all" },
+          { label: "TX", value: "tx" },
+          { label: "RX", value: "rx" },
+          { label: "已解析", value: "matched" },
+        ]}
+        value={filter}
+        onChange={setFilter}
+      />
 
       {/* Packet Feed */}
       <div className="flex-1 flex flex-col gap-2">
@@ -187,51 +176,36 @@ export function ConsoleScreen({
         className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 flex flex-col gap-2"
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
-            {(["hex", "ascii", "json"] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => {
-                  setInputFormat(f);
-                  setSendError("");
-                  if (f === "hex") setDraft("AA 55 01 01");
-                  else if (f === "json") setDraft('{"pwm":75}');
-                  else setDraft("READ_TEMP\\r\\n");
-                }}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold uppercase ${
-                  inputFormat === f
-                    ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                    : "text-slate-500 dark:text-slate-400"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            compact
+            ariaLabel="发送编码格式"
+            options={[
+              { label: "HEX", value: "hex" },
+              { label: "ASCII", value: "ascii" },
+              { label: "JSON", value: "json" },
+            ]}
+            value={inputFormat}
+            onChange={(f) => {
+              setInputFormat(f);
+              setSendError("");
+              if (f === "hex") setDraft("AA 55 01 01");
+              else if (f === "json") setDraft('{"pwm":75}');
+              else setDraft("READ_TEMP\\r\\n");
+            }}
+          />
 
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0">
-            {(
-              [
-                { id: "none", label: "无" },
-                { id: "sum8", label: "SUM8" },
-                { id: "crc16", label: "CRC16" },
-              ] as const
-            ).map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setChecksum(c.id)}
-                className={`px-2 py-1 rounded-md text-[11px] font-mono whitespace-nowrap ${
-                  checksum === c.id
-                    ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                    : "text-slate-500 dark:text-slate-400"
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            compact
+            ariaLabel="校验算法"
+            className="shrink-0"
+            options={[
+              { label: "无", value: "none" },
+              { label: "SUM8", value: "sum8" },
+              { label: "CRC16", value: "crc16" },
+            ]}
+            value={checksum}
+            onChange={setChecksum}
+          />
         </div>
 
         <div className="flex items-center gap-2">
