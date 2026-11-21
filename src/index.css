@@ -94,6 +94,28 @@
   padding: 9px 12px;
 }
 
+/*
+ * 按钮外观覆盖：antd 把 color/background/border 直接声明在无层级的
+ * .adm-button 上，Tailwind 颜色工具类在 @layer 里永远赢不了它，
+ * 所以颜色必须走这里——通过 antd 按钮自己的 CSS 变量（--background-color /
+ * --text-color / --border-color）注入。
+ * 双写 .adm-button.adm-button 是为了特异性压过 antd 的
+ * .adm-button-default.adm-button-fill-outline 这类三段组合选择器。
+ */
+.adm-button.adm-button.is-rose-soft {
+  --background-color: #fff1f2;
+  --text-color: #e11d48;
+  --border-color: #fecdd3;
+}
+.dark .adm-button.adm-button.is-rose-soft {
+  --background-color: rgba(244, 63, 94, 0.15);
+  --text-color: #fda4af;
+  --border-color: rgba(244, 63, 94, 0.25);
+}
+.adm-button.adm-button.is-muted {
+  --text-color: #64748b;
+}
+
 .adm-input {
   --font-size: 12px;
 }

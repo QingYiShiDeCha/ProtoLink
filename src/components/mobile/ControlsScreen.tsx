@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Button, Card, Input, Switch } from '../../ui';
-import { Popup } from 'antd-mobile';
+import React, { useState } from "react";
+import { Button, Card, Input, Switch } from "../../ui";
+import { Popup, Space } from "antd-mobile";
 import {
   Activity,
   ArrowDown,
@@ -18,7 +18,7 @@ import {
   Square,
   Trash2,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 import type {
   ChecksumType,
   ConnectionStatus,
@@ -31,8 +31,8 @@ import type {
   TransportType,
   VirtualMcuState,
   WidgetKind,
-} from '../../types/app';
-import { buildOutgoingPayload } from '../../utils/protocolEngine';
+} from "../../types/app";
+import { buildOutgoingPayload } from "../../utils/protocolEngine";
 
 interface ControlsScreenProps {
   activeTransport: TransportType;
@@ -49,23 +49,23 @@ interface ControlsScreenProps {
   onTriggerDpad: (widgetId: string, dir: keyof DpadPayloads) => void;
   onTriggerMode: (widgetId: string, modeIdx: number) => void;
   onTriggerButton: (widgetId: string) => void;
-  onAddWidget: (widget: Omit<ControlWidget, 'id'>) => void;
-  onEditWidget: (widgetId: string, widget: Omit<ControlWidget, 'id'>) => void;
+  onAddWidget: (widget: Omit<ControlWidget, "id">) => void;
+  onEditWidget: (widgetId: string, widget: Omit<ControlWidget, "id">) => void;
   onDeleteWidget: (widgetId: string) => void;
 }
 
 const TRANSPORT_LABELS: Record<TransportType, string> = {
-  ble: '蓝牙 BLE',
-  mqtt: 'MQTT',
-  tcp: 'TCP',
+  ble: "蓝牙 BLE",
+  mqtt: "MQTT",
+  tcp: "TCP",
 };
 
 const RGB_PRESETS = [
-  { label: '暖白', hex: '#FFF4E0' },
-  { label: '正红', hex: '#EF4444' },
-  { label: '翠绿', hex: '#10B981' },
-  { label: '冰蓝', hex: '#3B82F6' },
-  { label: '关灯', hex: '#000000' },
+  { label: "暖白", hex: "#FFF4E0" },
+  { label: "正红", hex: "#EF4444" },
+  { label: "翠绿", hex: "#10B981" },
+  { label: "冰蓝", hex: "#3B82F6" },
+  { label: "关灯", hex: "#000000" },
 ];
 
 export function ControlsScreen({
@@ -89,43 +89,45 @@ export function ControlsScreen({
 }: ControlsScreenProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [kind, setKind] = useState<WidgetKind>('switch');
-  const [name, setName] = useState('');
-  const [format, setFormat] = useState<PayloadFormat>('hex');
-  const [checksum, setChecksum] = useState<ChecksumType>('sum8');
-  const [onPayload, setOnPayload] = useState('AA 55 01 01');
-  const [offPayload, setOffPayload] = useState('AA 55 01 00');
-  const [sliderTemplate, setSliderTemplate] = useState('AA 55 02 {hex}');
-  const [rgbTemplate, setRgbTemplate] = useState('AA 55 05 {rh} {gh} {bh}');
-  const [dpadUp, setDpadUp] = useState('AA 55 06 01');
-  const [dpadDown, setDpadDown] = useState('AA 55 06 02');
-  const [dpadLeft, setDpadLeft] = useState('AA 55 06 03');
-  const [dpadRight, setDpadRight] = useState('AA 55 06 04');
-  const [dpadStop, setDpadStop] = useState('AA 55 06 00');
-  const [modeSpec, setModeSpec] = useState('待机=AA 55 07 00,自动=AA 55 07 01,调试=AA 55 07 02');
-  const [minVal, setMinVal] = useState('0');
-  const [maxVal, setMaxVal] = useState('100');
-  const [unit, setUnit] = useState('%');
-  const [mqttTopic, setMqttTopic] = useState('mcu/esp32/cmd/custom');
-  const [boundRuleId, setBoundRuleId] = useState(rules[0]?.id ?? '');
-  const [formError, setFormError] = useState('');
+  const [kind, setKind] = useState<WidgetKind>("switch");
+  const [name, setName] = useState("");
+  const [format, setFormat] = useState<PayloadFormat>("hex");
+  const [checksum, setChecksum] = useState<ChecksumType>("sum8");
+  const [onPayload, setOnPayload] = useState("AA 55 01 01");
+  const [offPayload, setOffPayload] = useState("AA 55 01 00");
+  const [sliderTemplate, setSliderTemplate] = useState("AA 55 02 {hex}");
+  const [rgbTemplate, setRgbTemplate] = useState("AA 55 05 {rh} {gh} {bh}");
+  const [dpadUp, setDpadUp] = useState("AA 55 06 01");
+  const [dpadDown, setDpadDown] = useState("AA 55 06 02");
+  const [dpadLeft, setDpadLeft] = useState("AA 55 06 03");
+  const [dpadRight, setDpadRight] = useState("AA 55 06 04");
+  const [dpadStop, setDpadStop] = useState("AA 55 06 00");
+  const [modeSpec, setModeSpec] = useState(
+    "待机=AA 55 07 00,自动=AA 55 07 01,调试=AA 55 07 02",
+  );
+  const [minVal, setMinVal] = useState("0");
+  const [maxVal, setMaxVal] = useState("100");
+  const [unit, setUnit] = useState("%");
+  const [mqttTopic, setMqttTopic] = useState("mcu/esp32/cmd/custom");
+  const [boundRuleId, setBoundRuleId] = useState(rules[0]?.id ?? "");
+  const [formError, setFormError] = useState("");
 
   const handleOpenCreate = () => {
     setEditingId(null);
-    setKind('switch');
-    setName('');
-    setFormat('hex');
-    setChecksum('sum8');
-    setOnPayload('AA 55 01 01');
-    setOffPayload('AA 55 01 00');
-    setSliderTemplate('AA 55 02 {hex}');
-    setRgbTemplate('AA 55 05 {rh} {gh} {bh}');
-    setMinVal('0');
-    setMaxVal('100');
-    setUnit('%');
-    setMqttTopic('mcu/esp32/cmd/custom');
-    setBoundRuleId(rules[0]?.id ?? '');
-    setFormError('');
+    setKind("switch");
+    setName("");
+    setFormat("hex");
+    setChecksum("sum8");
+    setOnPayload("AA 55 01 01");
+    setOffPayload("AA 55 01 00");
+    setSliderTemplate("AA 55 02 {hex}");
+    setRgbTemplate("AA 55 05 {rh} {gh} {bh}");
+    setMinVal("0");
+    setMaxVal("100");
+    setUnit("%");
+    setMqttTopic("mcu/esp32/cmd/custom");
+    setBoundRuleId(rules[0]?.id ?? "");
+    setFormError("");
     setSheetOpen(true);
   };
 
@@ -137,8 +139,8 @@ export function ControlsScreen({
     setChecksum(w.checksum);
     setOnPayload(w.onPayload);
     setOffPayload(w.offPayload);
-    setSliderTemplate(w.sliderTemplate || 'AA 55 02 {hex}');
-    setRgbTemplate(w.rgbTemplate || 'AA 55 05 {rh} {gh} {bh}');
+    setSliderTemplate(w.sliderTemplate || "AA 55 02 {hex}");
+    setRgbTemplate(w.rgbTemplate || "AA 55 05 {rh} {gh} {bh}");
     if (w.dpadPayloads) {
       setDpadUp(w.dpadPayloads.up);
       setDpadDown(w.dpadPayloads.down);
@@ -147,14 +149,16 @@ export function ControlsScreen({
       setDpadStop(w.dpadPayloads.stop);
     }
     if (w.modeOptions) {
-      setModeSpec(w.modeOptions.map((o) => `${o.label}=${o.payload}`).join(','));
+      setModeSpec(
+        w.modeOptions.map((o) => `${o.label}=${o.payload}`).join(","),
+      );
     }
     setMinVal(String(w.min));
     setMaxVal(String(w.max));
     setUnit(w.unit);
-    setMqttTopic(w.mqttTopic || '');
-    setBoundRuleId(w.boundRuleId || rules[0]?.id || '');
-    setFormError('');
+    setMqttTopic(w.mqttTopic || "");
+    setBoundRuleId(w.boundRuleId || rules[0]?.id || "");
+    setFormError("");
     setSheetOpen(true);
   };
 
@@ -164,18 +168,18 @@ export function ControlsScreen({
       .map((s) => s.trim())
       .filter(Boolean)
       .map((pair) => {
-        const [label, ...rest] = pair.split('=');
+        const [label, ...rest] = pair.split("=");
         return {
-          label: (label || '').trim(),
-          payload: rest.join('=').trim(),
+          label: (label || "").trim(),
+          payload: rest.join("=").trim(),
         };
       })
       .filter((item) => item.label && item.payload);
     return items.length > 0
       ? items
       : [
-          { label: '待机', payload: 'AA 55 07 00' },
-          { label: '运行', payload: 'AA 55 07 01' },
+          { label: "待机", payload: "AA 55 07 00" },
+          { label: "运行", payload: "AA 55 07 01" },
         ];
   };
 
@@ -183,31 +187,33 @@ export function ControlsScreen({
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setFormError('请输入控件名称');
+      setFormError("请输入控件名称");
       return;
     }
 
     const parsedMin = Number(minVal) || 0;
     const parsedMax = Math.max(parsedMin + 1, Number(maxVal) || 100);
-    const existing = editingId ? widgets.find((w) => w.id === editingId) : undefined;
+    const existing = editingId
+      ? widgets.find((w) => w.id === editingId)
+      : undefined;
     const parsedModes = parseModeOptions(modeSpec);
 
-    const payloadObj: Omit<ControlWidget, 'id'> = {
+    const payloadObj: Omit<ControlWidget, "id"> = {
       name: trimmed,
       subtitle:
-        kind === 'switch'
+        kind === "switch"
           ? `${format.toUpperCase()} 开关 · ON: ${onPayload} · OFF: ${offPayload}`
-          : kind === 'slider'
-          ? `${format.toUpperCase()} 调节 · 模板 ${sliderTemplate}`
-          : kind === 'rgb'
-          ? `${format.toUpperCase()} 彩灯 · 模板 ${rgbTemplate}`
-          : kind === 'dpad'
-          ? `${format.toUpperCase()} 方向控制 · 松手发 ${dpadStop}`
-          : kind === 'mode'
-          ? `${format.toUpperCase()} 挡位 · ${parsedModes.map((m) => m.label).join(' / ')}`
-          : kind === 'button'
-          ? `${format.toUpperCase()} 指令 · ${onPayload}`
-          : `绑定协议：${rules.find((r) => r.id === boundRuleId)?.name ?? '未绑定'}`,
+          : kind === "slider"
+            ? `${format.toUpperCase()} 调节 · 模板 ${sliderTemplate}`
+            : kind === "rgb"
+              ? `${format.toUpperCase()} 彩灯 · 模板 ${rgbTemplate}`
+              : kind === "dpad"
+                ? `${format.toUpperCase()} 方向控制 · 松手发 ${dpadStop}`
+                : kind === "mode"
+                  ? `${format.toUpperCase()} 挡位 · ${parsedModes.map((m) => m.label).join(" / ")}`
+                  : kind === "button"
+                    ? `${format.toUpperCase()} 指令 · ${onPayload}`
+                    : `绑定协议：${rules.find((r) => r.id === boundRuleId)?.name ?? "未绑定"}`,
       kind,
       format,
       checksum,
@@ -216,13 +222,13 @@ export function ControlsScreen({
       sliderTemplate: sliderTemplate.trim(),
       min: parsedMin,
       max: parsedMax,
-      step: kind === 'slider' ? 5 : 1,
+      step: kind === "slider" ? 5 : 1,
       unit: unit.trim(),
       boolValue: existing?.boolValue ?? false,
       numericValue:
         existing?.numericValue ??
-        (kind === 'slider' ? Math.round((parsedMin + parsedMax) / 2) : 0),
-      rgbValue: existing?.rgbValue ?? '#0D9488',
+        (kind === "slider" ? Math.round((parsedMin + parsedMax) / 2) : 0),
+      rgbValue: existing?.rgbValue ?? "#0D9488",
       rgbTemplate: rgbTemplate.trim(),
       dpadPayloads: {
         up: dpadUp.trim(),
@@ -231,12 +237,13 @@ export function ControlsScreen({
         right: dpadRight.trim(),
         stop: dpadStop.trim(),
       },
-      activeDirection: existing?.activeDirection ?? '',
+      activeDirection: existing?.activeDirection ?? "",
       modeOptions: parsedModes,
       activeModeIndex: existing?.activeModeIndex ?? 0,
       mqttTopic: mqttTopic.trim() || undefined,
-      boundRuleId: kind === 'telemetry' ? boundRuleId : undefined,
-      lastUpdatedText: existing?.lastUpdatedText ?? (kind === 'telemetry' ? '--' : undefined),
+      boundRuleId: kind === "telemetry" ? boundRuleId : undefined,
+      lastUpdatedText:
+        existing?.lastUpdatedText ?? (kind === "telemetry" ? "--" : undefined),
     };
 
     if (editingId) {
@@ -245,9 +252,9 @@ export function ControlsScreen({
       onAddWidget(payloadObj);
     }
 
-    setName('');
+    setName("");
     setEditingId(null);
-    setFormError('');
+    setFormError("");
     setSheetOpen(false);
   };
 
@@ -260,8 +267,8 @@ export function ControlsScreen({
             硬件交互面板
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 tabular-nums">
-            {connectionStatus === 'connected' ? '链路就绪' : '未连接'} · LED{' '}
-            {virtualMcu.ledOn ? '亮' : '灭'} · PWM {virtualMcu.pwmDuty}% ·{' '}
+            {connectionStatus === "connected" ? "链路就绪" : "未连接"} · LED{" "}
+            {virtualMcu.ledOn ? "亮" : "灭"} · PWM {virtualMcu.pwmDuty}% ·{" "}
             {virtualMcu.workMode}
           </p>
         </div>
@@ -270,24 +277,26 @@ export function ControlsScreen({
           variant="primary"
           size="sm"
           onPress={handleOpenCreate}
-          className="min-h-[44px] px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0"
+          className=""
         >
-          <Plus className="w-4 h-4" />
-          <span>添加控件</span>
+          <div className="flex items-center justify-center gap-1 py-2">
+            <Plus className="w-4 h-4" />
+            <span>添加控件</span>
+          </div>
         </Button>
       </div>
 
       {/* Quick Active Transport Selector */}
       <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800">
-        {(['ble', 'mqtt', 'tcp'] as const).map((t) => (
+        {(["ble", "mqtt", "tcp"] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => onSwitchTransport(t)}
             className={`min-h-[36px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
               activeTransport === t
-                ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-teal-400'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-teal-400"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
             }`}
           >
             {TRANSPORT_LABELS[t]}
@@ -301,7 +310,9 @@ export function ControlsScreen({
           <div className="flex items-center gap-2 min-w-0">
             <Clock
               className={`w-4 h-4 shrink-0 ${
-                polling.enabled ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400'
+                polling.enabled
+                  ? "text-teal-600 dark:text-teal-400"
+                  : "text-slate-400"
               }`}
             />
             <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
@@ -323,7 +334,9 @@ export function ControlsScreen({
 
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums truncate">
-            {polling.enabled ? `运行中 · 每 ${polling.intervalMs} ms` : '已停止 · 自动采集传感器'}
+            {polling.enabled
+              ? `运行中 · 每 ${polling.intervalMs} ms`
+              : "已停止 · 自动采集传感器"}
           </p>
           <div className="flex items-center gap-1 shrink-0">
             {[500, 1000, 2000].map((ms) => (
@@ -333,8 +346,8 @@ export function ControlsScreen({
                 onClick={() => onUpdatePolling({ intervalMs: ms })}
                 className={`px-2 py-1 rounded-lg text-[11px] font-mono tabular-nums whitespace-nowrap ${
                   polling.intervalMs === ms
-                    ? 'bg-teal-600 text-white'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                    ? "bg-teal-600 text-white"
+                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 {ms >= 1000 ? `${ms / 1000}s` : `${ms}ms`}
@@ -368,7 +381,7 @@ export function ControlsScreen({
             </div>
           );
 
-          if (widget.kind === 'switch') {
+          if (widget.kind === "switch") {
             return (
               <Card
                 key={widget.id}
@@ -379,8 +392,8 @@ export function ControlsScreen({
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                         widget.boolValue
-                          ? 'bg-amber-500/15 text-amber-500'
-                          : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+                          ? "bg-amber-500/15 text-amber-500"
+                          : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                       }`}
                     >
                       <Lightbulb className="w-5 h-5" />
@@ -390,8 +403,10 @@ export function ControlsScreen({
                         {widget.name}
                       </p>
                       <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        {widget.boolValue ? `ON: ${widget.onPayload}` : `OFF: ${widget.offPayload}`} ·{' '}
-                        {TRANSPORT_LABELS[activeTransport]}
+                        {widget.boolValue
+                          ? `ON: ${widget.onPayload}`
+                          : `OFF: ${widget.offPayload}`}{" "}
+                        · {TRANSPORT_LABELS[activeTransport]}
                       </p>
                     </div>
                   </div>
@@ -399,7 +414,9 @@ export function ControlsScreen({
                   <div className="flex items-center gap-1 shrink-0">
                     <Switch
                       isSelected={widget.boolValue}
-                      onChange={(checked) => onTriggerSwitch(widget.id, checked)}
+                      onChange={(checked) =>
+                        onTriggerSwitch(widget.id, checked)
+                      }
                       aria-label={`切换${widget.name}`}
                     >
                       <Switch.Content aria-label={`切换${widget.name}`}>
@@ -415,12 +432,12 @@ export function ControlsScreen({
             );
           }
 
-          if (widget.kind === 'slider') {
+          if (widget.kind === "slider") {
             const preview = buildOutgoingPayload(
               widget.sliderTemplate,
               widget.format,
               widget.checksum,
-              widget.numericValue
+              widget.numericValue,
             );
 
             return (
@@ -438,7 +455,9 @@ export function ControlsScreen({
                         {widget.name}
                       </p>
                       <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
-                        {preview.ok ? `下发帧: ${preview.rawText.trim()}` : widget.sliderTemplate}
+                        {preview.ok
+                          ? `下发帧: ${preview.rawText.trim()}`
+                          : widget.sliderTemplate}
                       </p>
                     </div>
                   </div>
@@ -459,14 +478,16 @@ export function ControlsScreen({
                   step={widget.step}
                   value={widget.numericValue}
                   aria-label={widget.name}
-                  onChange={(e) => onTriggerSlider(widget.id, Number(e.target.value))}
+                  onChange={(e) =>
+                    onTriggerSlider(widget.id, Number(e.target.value))
+                  }
                   className="w-full h-2 accent-teal-600 cursor-pointer"
                 />
 
                 <div className="grid grid-cols-5 gap-1.5">
                   {[0, 25, 50, 75, 100].map((pct) => {
                     const targetVal = Math.round(
-                      widget.min + ((widget.max - widget.min) * pct) / 100
+                      widget.min + ((widget.max - widget.min) * pct) / 100,
                     );
                     const active = widget.numericValue === targetVal;
                     return (
@@ -476,8 +497,8 @@ export function ControlsScreen({
                         onClick={() => onTriggerSlider(widget.id, targetVal)}
                         className={`min-h-[34px] rounded-lg text-[11px] font-mono tabular-nums font-medium transition-colors ${
                           active
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                            ? "bg-teal-600 text-white"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                         }`}
                       >
                         {targetVal}
@@ -490,14 +511,14 @@ export function ControlsScreen({
             );
           }
 
-          if (widget.kind === 'rgb') {
-            const hexColor = widget.rgbValue || '#0D9488';
+          if (widget.kind === "rgb") {
+            const hexColor = widget.rgbValue || "#0D9488";
             const preview = buildOutgoingPayload(
-              widget.rgbTemplate || 'AA 55 05 {rh} {gh} {bh}',
+              widget.rgbTemplate || "AA 55 05 {rh} {gh} {bh}",
               widget.format,
               widget.checksum,
               0,
-              hexColor
+              hexColor,
             );
 
             return (
@@ -518,7 +539,9 @@ export function ControlsScreen({
                         {widget.name}
                       </p>
                       <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
-                        {preview.ok ? `下发帧: ${preview.rawText.trim()}` : widget.rgbTemplate}
+                        {preview.ok
+                          ? `下发帧: ${preview.rawText.trim()}`
+                          : widget.rgbTemplate}
                       </p>
                     </div>
                   </div>
@@ -528,7 +551,9 @@ export function ControlsScreen({
                       type="color"
                       value={hexColor}
                       aria-label={`${widget.name}取色器`}
-                      onChange={(e) => onTriggerRgb(widget.id, e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        onTriggerRgb(widget.id, e.target.value.toUpperCase())
+                      }
                       className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer"
                     />
                     {actionButtons}
@@ -543,8 +568,8 @@ export function ControlsScreen({
                       onClick={() => onTriggerRgb(widget.id, preset.hex)}
                       className={`min-h-[34px] rounded-lg text-[11px] font-medium border transition-colors ${
                         hexColor.toUpperCase() === preset.hex
-                          ? 'border-teal-600 bg-teal-600/10 text-teal-700 dark:text-teal-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          ? "border-teal-600 bg-teal-600/10 text-teal-700 dark:text-teal-300"
+                          : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                       }`}
                     >
                       {preset.label}
@@ -555,13 +580,13 @@ export function ControlsScreen({
             );
           }
 
-          if (widget.kind === 'dpad') {
+          if (widget.kind === "dpad") {
             const dp = widget.dpadPayloads || {
-              up: 'AA 55 06 01',
-              down: 'AA 55 06 02',
-              left: 'AA 55 06 03',
-              right: 'AA 55 06 04',
-              stop: 'AA 55 06 00',
+              up: "AA 55 06 01",
+              down: "AA 55 06 02",
+              left: "AA 55 06 03",
+              right: "AA 55 06 04",
+              stop: "AA 55 06 00",
             };
             const dirBtns: Array<{
               key: keyof DpadPayloads;
@@ -569,11 +594,36 @@ export function ControlsScreen({
               Icon: React.ComponentType<{ className?: string }>;
               pos: string;
             }> = [
-              { key: 'up', label: '前', Icon: ArrowUp, pos: 'col-start-2 row-start-1' },
-              { key: 'left', label: '左', Icon: ArrowLeft, pos: 'col-start-1 row-start-2' },
-              { key: 'stop', label: '停', Icon: Square, pos: 'col-start-2 row-start-2' },
-              { key: 'right', label: '右', Icon: ArrowRight, pos: 'col-start-3 row-start-2' },
-              { key: 'down', label: '后', Icon: ArrowDown, pos: 'col-start-2 row-start-3' },
+              {
+                key: "up",
+                label: "前",
+                Icon: ArrowUp,
+                pos: "col-start-2 row-start-1",
+              },
+              {
+                key: "left",
+                label: "左",
+                Icon: ArrowLeft,
+                pos: "col-start-1 row-start-2",
+              },
+              {
+                key: "stop",
+                label: "停",
+                Icon: Square,
+                pos: "col-start-2 row-start-2",
+              },
+              {
+                key: "right",
+                label: "右",
+                Icon: ArrowRight,
+                pos: "col-start-3 row-start-2",
+              },
+              {
+                key: "down",
+                label: "后",
+                Icon: ArrowDown,
+                pos: "col-start-2 row-start-3",
+              },
             ];
 
             return (
@@ -595,7 +645,7 @@ export function ControlsScreen({
 
                 <div className="grid grid-cols-3 grid-rows-3 gap-1.5 max-w-[216px] mx-auto w-full">
                   {dirBtns.map(({ key, label, Icon, pos }) => {
-                    const isStop = key === 'stop';
+                    const isStop = key === "stop";
                     const active = widget.activeDirection === key;
                     return (
                       <button
@@ -605,18 +655,18 @@ export function ControlsScreen({
                           if (!isStop) onTriggerDpad(widget.id, key);
                         }}
                         onPointerUp={() => {
-                          onTriggerDpad(widget.id, 'stop');
+                          onTriggerDpad(widget.id, "stop");
                         }}
                         onPointerCancel={() => {
-                          if (!isStop) onTriggerDpad(widget.id, 'stop');
+                          if (!isStop) onTriggerDpad(widget.id, "stop");
                         }}
                         aria-label={`${widget.name}-${label}`}
                         className={`${pos} min-h-[44px] rounded-xl flex items-center justify-center gap-1 text-xs font-semibold transition-colors select-none ${
                           isStop
-                            ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-300'
+                            ? "bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-300"
                             : active
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100'
+                              ? "bg-teal-600 text-white"
+                              : "bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -629,10 +679,10 @@ export function ControlsScreen({
             );
           }
 
-          if (widget.kind === 'mode') {
+          if (widget.kind === "mode") {
             const options = widget.modeOptions || [
-              { label: '待机', payload: 'AA 55 07 00' },
-              { label: '自动', payload: 'AA 55 07 01' },
+              { label: "待机", payload: "AA 55 07 00" },
+              { label: "自动", payload: "AA 55 07 01" },
             ];
             return (
               <Card
@@ -645,8 +695,10 @@ export function ControlsScreen({
                       {widget.name}
                     </p>
                     <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                      当前：{options[widget.activeModeIndex ?? 0]?.label ?? '--'} ·{' '}
-                      {options[widget.activeModeIndex ?? 0]?.payload ?? ''}
+                      当前：
+                      {options[widget.activeModeIndex ?? 0]?.label ??
+                        "--"} ·{" "}
+                      {options[widget.activeModeIndex ?? 0]?.payload ?? ""}
                     </p>
                   </div>
                   {actionButtons}
@@ -662,8 +714,8 @@ export function ControlsScreen({
                         onClick={() => onTriggerMode(widget.id, idx)}
                         className={`min-h-[40px] px-2 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap ${
                           active
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                            ? "bg-teal-600 text-white"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                         }`}
                       >
                         {opt.label}
@@ -675,7 +727,7 @@ export function ControlsScreen({
             );
           }
 
-          if (widget.kind === 'button') {
+          if (widget.kind === "button") {
             return (
               <Card
                 key={widget.id}
@@ -698,8 +750,10 @@ export function ControlsScreen({
                       onPress={() => onTriggerButton(widget.id)}
                       className="min-h-[42px] px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap"
                     >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>下发指令</span>
+                      <div className="flex items-center justify-center gap-1 py-2">
+                        <Send className="w-3.5 h-3.5" />
+                        <span>下发指令</span>
+                      </div>
                     </Button>
                     {actionButtons}
                   </div>
@@ -710,7 +764,8 @@ export function ControlsScreen({
 
           // telemetry readout widget
           const matchedRule = rules.find((r) => r.id === widget.boundRuleId);
-          const liveText = matchedRule?.lastDecodedValue || widget.lastUpdatedText || '--';
+          const liveText =
+            matchedRule?.lastDecodedValue || widget.lastUpdatedText || "--";
 
           return (
             <Card
@@ -727,7 +782,7 @@ export function ControlsScreen({
                       {widget.name}
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                      绑定规则：{matchedRule?.name ?? '未绑定'}
+                      绑定规则：{matchedRule?.name ?? "未绑定"}
                     </p>
                   </div>
                 </div>
@@ -753,8 +808,8 @@ export function ControlsScreen({
           bodyStyle={{
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
-            maxHeight: '92%',
-            overflow: 'hidden',
+            maxHeight: "92%",
+            overflow: "hidden",
           }}
         >
           <form
@@ -765,7 +820,7 @@ export function ControlsScreen({
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Gauge className="w-4 h-4 text-teal-600" />
-                <span>{editingId ? '编辑硬件控件' : '添加自定义控制控件'}</span>
+                <span>{editingId ? "编辑硬件控件" : "添加自定义控制控件"}</span>
               </h3>
               <button
                 type="button"
@@ -781,13 +836,13 @@ export function ControlsScreen({
             <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
               {(
                 [
-                  { id: 'switch', label: '开关' },
-                  { id: 'slider', label: 'PWM/滑块' },
-                  { id: 'rgb', label: 'RGB彩灯' },
-                  { id: 'dpad', label: '方向键' },
-                  { id: 'mode', label: '挡位模式' },
-                  { id: 'button', label: '指令键' },
-                  { id: 'telemetry', label: '状态监控' },
+                  { id: "switch", label: "开关" },
+                  { id: "slider", label: "PWM/滑块" },
+                  { id: "rgb", label: "RGB彩灯" },
+                  { id: "dpad", label: "方向键" },
+                  { id: "mode", label: "挡位模式" },
+                  { id: "button", label: "指令键" },
+                  { id: "telemetry", label: "状态监控" },
                 ] as const
               ).map((item) => (
                 <button
@@ -796,8 +851,8 @@ export function ControlsScreen({
                   onClick={() => setKind(item.id)}
                   className={`min-h-[34px] rounded-lg text-[11px] font-medium transition-colors whitespace-nowrap ${
                     kind === item.id
-                      ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
+                      : "text-slate-600 dark:text-slate-400"
                   }`}
                 >
                   {item.label}
@@ -806,7 +861,9 @@ export function ControlsScreen({
             </div>
 
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400">控件名称</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                控件名称
+              </span>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -815,20 +872,22 @@ export function ControlsScreen({
               />
             </label>
 
-            {kind !== 'telemetry' && (
+            {kind !== "telemetry" && (
               <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">发送格式</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    发送格式
+                  </span>
                   <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-                    {(['hex', 'ascii', 'json'] as const).map((f) => (
+                    {(["hex", "ascii", "json"] as const).map((f) => (
                       <button
                         key={f}
                         type="button"
                         onClick={() => setFormat(f)}
                         className={`min-h-[32px] rounded-lg text-[11px] font-mono font-semibold uppercase ${
                           format === f
-                            ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                            : 'text-slate-500'
+                            ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
+                            : "text-slate-500"
                         }`}
                       >
                         {f}
@@ -838,13 +897,15 @@ export function ControlsScreen({
                 </label>
 
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">自动追加校验</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    自动追加校验
+                  </span>
                   <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
                     {(
                       [
-                        { id: 'none', label: '无' },
-                        { id: 'sum8', label: 'SUM8' },
-                        { id: 'crc16', label: 'CRC16' },
+                        { id: "none", label: "无" },
+                        { id: "sum8", label: "SUM8" },
+                        { id: "crc16", label: "CRC16" },
                       ] as const
                     ).map((c) => (
                       <button
@@ -853,8 +914,8 @@ export function ControlsScreen({
                         onClick={() => setChecksum(c.id)}
                         className={`min-h-[32px] rounded-lg text-[11px] font-mono font-semibold ${
                           checksum === c.id
-                            ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
-                            : 'text-slate-500'
+                            ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
+                            : "text-slate-500"
                         }`}
                       >
                         {c.label}
@@ -865,10 +926,12 @@ export function ControlsScreen({
               </div>
             )}
 
-            {kind === 'switch' && (
+            {kind === "switch" && (
               <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">打开 (ON) 报文</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    打开 (ON) 报文
+                  </span>
                   <Input
                     value={onPayload}
                     onChange={(e) => setOnPayload(e.target.value)}
@@ -876,7 +939,9 @@ export function ControlsScreen({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">关闭 (OFF) 报文</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    关闭 (OFF) 报文
+                  </span>
                   <Input
                     value={offPayload}
                     onChange={(e) => setOffPayload(e.target.value)}
@@ -886,11 +951,11 @@ export function ControlsScreen({
               </div>
             )}
 
-            {kind === 'slider' && (
+            {kind === "slider" && (
               <>
                 <label className="flex flex-col gap-1">
                   <span className="text-xs text-slate-500 dark:text-slate-400">
-                    模板（用 {'{val}'} 代表十进制，{'{hex}'} 代表单字节 HEX）
+                    模板（用 {"{val}"} 代表十进制，{"{hex}"} 代表单字节 HEX）
                   </span>
                   <Input
                     value={sliderTemplate}
@@ -900,7 +965,9 @@ export function ControlsScreen({
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">最小值</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      最小值
+                    </span>
                     <Input
                       type="number"
                       value={minVal}
@@ -909,7 +976,9 @@ export function ControlsScreen({
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">最大值</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      最大值
+                    </span>
                     <Input
                       type="number"
                       value={maxVal}
@@ -918,7 +987,9 @@ export function ControlsScreen({
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">单位</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      单位
+                    </span>
                     <Input
                       value={unit}
                       onChange={(e) => setUnit(e.target.value)}
@@ -930,10 +1001,11 @@ export function ControlsScreen({
               </>
             )}
 
-            {kind === 'rgb' && (
+            {kind === "rgb" && (
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  RGB 模板（支持 {'{rh} {gh} {bh}'} 十六进制 或 {'{r},{g},{b}'} 十进制）
+                  RGB 模板（支持 {"{rh} {gh} {bh}"} 十六进制 或 {"{r},{g},{b}"}{" "}
+                  十进制）
                 </span>
                 <Input
                   value={rgbTemplate}
@@ -943,7 +1015,7 @@ export function ControlsScreen({
               </label>
             )}
 
-            {kind === 'dpad' && (
+            {kind === "dpad" && (
               <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
                   <span className="text-xs text-slate-500">前 (UP)</span>
@@ -978,7 +1050,9 @@ export function ControlsScreen({
                   />
                 </label>
                 <label className="col-span-2 flex flex-col gap-1">
-                  <span className="text-xs text-slate-500">松手自动停止帧 (STOP)</span>
+                  <span className="text-xs text-slate-500">
+                    松手自动停止帧 (STOP)
+                  </span>
                   <Input
                     value={dpadStop}
                     onChange={(e) => setDpadStop(e.target.value)}
@@ -988,7 +1062,7 @@ export function ControlsScreen({
               </div>
             )}
 
-            {kind === 'mode' && (
+            {kind === "mode" && (
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   挡位定义（格式：名称=报文，用英文逗号分隔）
@@ -1001,9 +1075,11 @@ export function ControlsScreen({
               </label>
             )}
 
-            {kind === 'button' && (
+            {kind === "button" && (
               <label className="flex flex-col gap-1">
-                <span className="text-xs text-slate-500 dark:text-slate-400">下发指令内容</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  下发指令内容
+                </span>
                 <Input
                   value={onPayload}
                   onChange={(e) => setOnPayload(e.target.value)}
@@ -1012,9 +1088,11 @@ export function ControlsScreen({
               </label>
             )}
 
-            {kind === 'telemetry' && (
+            {kind === "telemetry" && (
               <label className="flex flex-col gap-1">
-                <span className="text-xs text-slate-500 dark:text-slate-400">绑定自定义接收规则</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  绑定自定义接收规则
+                </span>
                 <select
                   value={boundRuleId}
                   onChange={(e) => setBoundRuleId(e.target.value)}
@@ -1029,7 +1107,7 @@ export function ControlsScreen({
               </label>
             )}
 
-            {kind !== 'telemetry' && (
+            {kind !== "telemetry" && (
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   MQTT 独立主题（可选，留空则使用连接页默认主题）
@@ -1058,7 +1136,7 @@ export function ControlsScreen({
                 variant="primary"
                 className="flex-[2] min-h-[44px] rounded-xl text-sm font-semibold"
               >
-                {editingId ? '保存修改' : '添加到面板'}
+                {editingId ? "保存修改" : "添加到面板"}
               </Button>
             </div>
           </form>

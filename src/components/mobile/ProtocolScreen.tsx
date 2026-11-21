@@ -155,8 +155,10 @@ export function ProtocolScreen({
           onPress={handleOpenCreate}
           className="min-h-[44px] px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0"
         >
-          <Plus className="w-4 h-4" />
-          <span>新建规则</span>
+          <div className="flex items-center justify-center gap-1 py-2">
+            <Plus className="w-4 h-4" />
+            <span>新建规则</span>
+          </div>
         </Button>
       </div>
 
@@ -197,8 +199,10 @@ export function ProtocolScreen({
             onPress={handleRunTest}
             className="min-h-[42px] px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap"
           >
-            <Play className="w-3.5 h-3.5" />
-            <span>模拟解析</span>
+            <div className="flex items-center justify-center gap-1 py-2">
+              <Play className="w-3.5 h-3.5" />
+              <span>模拟解析</span>
+            </div>
           </Button>
         </div>
 
