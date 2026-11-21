@@ -1,6 +1,6 @@
 {
-  "name": "ProtoLink RN · 单片机协议调试助手",
-  "description": "面向嵌入式开发者的 React Native 移动调试工具，支持蓝牙 BLE、MQTT、TCP 通讯、自定义接收协议解析与 LED/PWM 硬件交互控件。",
+  "name": "ProtoLink · 单片机协议调试助手",
+  "description": "面向嵌入式开发者的 Capacitor Android 移动调试工具，支持蓝牙 BLE、MQTT、TCP 通讯、自定义接收协议解析与 LED/PWM 硬件交互控件。",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

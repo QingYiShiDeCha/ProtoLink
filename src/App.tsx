@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import mqtt, { type MqttClient } from 'mqtt';
-import { List, Popup, Segmented } from 'antd-mobile';
-import { Button } from './ui';
-import { Moon, Smartphone, Sun, X } from 'lucide-react';
+import { List, Popup } from 'antd-mobile';
+import { X } from 'lucide-react';
 import type {
   BleConfig,
   ChecksumType,
@@ -32,10 +31,7 @@ import {
   simulateMcuResponse,
   utf8ToBytes,
 } from './utils/protocolEngine';
-import { buildExpoBundleFiles } from './utils/rnSourceBuilder';
 import { MobileAppShell } from './components/mobile/MobileAppShell';
-import { CodeExplorerPanel } from './components/studio/CodeExplorerPanel';
-import { GuideModal } from './components/studio/GuideModal';
 import {
   connectNativeBleTo,
   isNativePlatform,
@@ -118,17 +114,10 @@ function loadSavedState(): ProtoLinkState {
 export default function App() {
   const [state, setState] = useState<ProtoLinkState>(loadSavedState);
   const [activeTab, setActiveTab] = useState<TabRoute>('controls');
-  const [studioView, setStudioView] = useState<'preview' | 'code'>('preview');
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [mobileCodeOpen, setMobileCodeOpen] = useState(false);
-  const [exportNotice, setExportNotice] = useState('');
   const [hardwareError, setHardwareError] = useState('');
 
-  const previewRef = useRef<HTMLDivElement>(null);
-  const codeRef = useRef<HTMLDivElement>(null);
   const liveBleCharRef = useRef<WebBluetoothCharacteristicLike | null>(null);
   const nativeBleRef = useRef<NativeBleLink | null>(null);
-  const isNative = isNativePlatform();
   const [bleScanOpen, setBleScanOpen] = useState(false);
   const [bleDevices, setBleDevices] = useState<ScannedDevice[]>([]);
   const [bleScanning, setBleScanning] = useState(false);
@@ -166,8 +155,6 @@ export default function App() {
       liveWsRef.current?.close();
     };
   }, []);
-
-  const rnFiles = useMemo(() => buildExpoBundleFiles('ProtoLink'), []);
 
   const getEndpointLabel = (st: ProtoLinkState, topicOverride?: string): string => {
     if (st.activeTransport === 'ble') {
@@ -520,7 +507,7 @@ export default function App() {
     const nav = navigator as unknown as WebBluetoothNavigatorLike;
     if (!nav.bluetooth) {
       setHardwareError(
-        '当前预览环境或浏览器未开放 Web Bluetooth（真机蓝牙需使用 Chrome 桌面/Android 或导出 React Native 原生工程运行）'
+        '当前浏览器未开放 Web Bluetooth（真机蓝牙请在 Android 应用内使用原生 BLE 扫描）'
       );
       return;
     }
@@ -751,153 +738,9 @@ export default function App() {
     return { ok: true, matches };
   };
 
-  const handleExportBundle = () => {
-    const bundle = {
-      project: 'protolink-rn',
-      framework: 'React Native + Expo SDK 52 + HeroUI Native',
-      files: rnFiles.map((f) => ({ path: f.path, content: f.content })),
-    };
-    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'protolink-react-native-expo.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    setExportNotice('已导出 Expo 原生调试工程包 (protolink-react-native-expo.json)');
-    window.setTimeout(() => setExportNotice(''), 3000);
-  };
-
   return (
-    <div className="min-h-[100dvh] bg-slate-100 text-slate-900">
-      {/* Studio Top Bar (3-zone contract) */}
-      <header className={`${isNative ? 'hidden' : 'hidden md:flex'} h-14 px-6 xl:px-8 items-center justify-between gap-8 bg-white border-b border-slate-200 sticky top-0 z-40`}>
-        <a
-          href="#top"
-          className="text-lg font-display font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
-        >
-          ProtoLink RN
-        </a>
-
-        <nav className="flex items-center gap-7 text-sm font-medium text-slate-600">
-          <button
-            type="button"
-            onClick={() => {
-              setStudioView('preview');
-              previewRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className={`transition-colors whitespace-nowrap shrink-0 ${
-              studioView === 'preview'
-                ? 'text-slate-900 font-semibold xl:font-medium'
-                : 'hover:text-slate-900'
-            }`}
-          >
-            手机预览
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStudioView('code');
-              codeRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className={`transition-colors whitespace-nowrap shrink-0 ${
-              studioView === 'code'
-                ? 'text-slate-900 font-semibold xl:font-medium'
-                : 'hover:text-slate-900'
-            }`}
-          >
-            原生源码
-          </button>
-          <button
-            type="button"
-            onClick={() => setGuideOpen(true)}
-            className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
-          >
-            运行指南
-          </button>
-        </nav>
-
-        <div className="flex items-center shrink-0">
-          <Button
-            variant="primary"
-            size="sm"
-            onPress={handleExportBundle}
-            className="min-h-[38px] px-4 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0"
-          >
-            导出源码工程
-          </Button>
-        </div>
-      </header>
-
-      {exportNotice && (
-        <div
-          role="status"
-          className="hidden md:block fixed bottom-5 right-6 z-50 rounded-xl bg-slate-900 text-white px-4 py-2.5 text-xs font-medium shadow-lg"
-        >
-          {exportNotice}
-        </div>
-      )}
-
-      {/* Responsive Studio Grid */}
-      <div className="xl:max-w-[1440px] xl:mx-auto md:px-6 xl:px-8 md:py-4 xl:grid xl:grid-cols-[410px_1fr] xl:gap-8 xl:items-start">
-        <div
-          ref={previewRef}
-          className={`${
-            studioView === 'code' ? 'hidden xl:flex' : 'md:flex'
-          } md:flex-col md:items-center md:gap-2.5`}
-        >
-          <div className={`${isNative ? 'hidden' : 'hidden md:flex'} w-[375px] items-center justify-between gap-2`}>
-            <Segmented
-              options={[
-                { label: 'iOS 风格', value: 'ios' },
-                { label: 'Android 风格', value: 'android' },
-              ]}
-              value={state.platform}
-              onChange={(value) =>
-                setState((prev) => ({ ...prev, platform: value as PlatformStyle }))
-              }
-            />
-
-            <Button
-              variant="outline"
-              size="sm"
-              onPress={() =>
-                setState((prev) => ({ ...prev, darkMode: !prev.darkMode }))
-              }
-              aria-label={state.darkMode ? '切换为浅色模式' : '切换为深色模式'}
-              className="min-h-[42px] px-3.5 rounded-xl bg-white text-xs font-medium text-slate-700 whitespace-nowrap"
-            >
-              {state.darkMode ? (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
-                  <span>浅色</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-slate-600" />
-                  <span>深色</span>
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className={`h-[100dvh] ${isNative ? 'w-full' : 'md:w-[375px] md:h-[clamp(560px,calc(100dvh-142px),710px)] md:rounded-[40px] md:bg-slate-900 md:p-2.5 md:shadow-xl md:border md:border-slate-800'} relative`}>
-            <div
-              className={`hidden md:flex bg-slate-950 rounded-full mx-auto mb-1.5 items-center justify-center transition-all ${
-                state.platform === 'ios' ? 'w-24 h-5' : 'w-4 h-4'
-              }`}
-              aria-hidden="true"
-            >
-              <div className="w-2 h-2 rounded-full bg-slate-800" />
-            </div>
-
-            <div className="h-full md:w-full md:h-[calc(100%-26px)] md:rounded-[30px] overflow-hidden relative bg-slate-50">
-              <MobileAppShell
+    <div className="h-[100dvh] w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <MobileAppShell
                 state={state}
                 activeTab={activeTab}
                 hardwareError={hardwareError}
@@ -994,70 +837,7 @@ export default function App() {
                   setHardwareError('');
                   setState(getInitialProtoLinkState());
                 }}
-                onOpenMobileCodeSheet={() => setMobileCodeOpen(true)}
               />
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: React Native Expo Code Studio */}
-        <div
-          ref={codeRef}
-          className={`${
-            isNative
-              ? 'hidden'
-              : studioView === 'code'
-                ? 'hidden md:flex'
-                : 'hidden xl:flex'
-          } flex-col gap-5 min-w-0`}
-        >
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-display font-bold tracking-tight text-slate-900 text-balance">
-                ProtoLink RN · 单片机通讯协议调试软件
-              </h1>
-              <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-                支持蓝牙 BLE、MQTT（含直连 WS Broker）与 TCP 三通道调试，内置 LED 开关、PWM 调光/调速、RGB 彩灯、方向键松手停止、多挡位模式、定时轮询与自定义接收协议解析；右侧同步完整 React Native + HeroUI Native 原生工程源码。
-              </p>
-            </div>
-            <div className="text-xs text-slate-500 tabular-nums whitespace-nowrap">
-              BLE · MQTT · TCP · HeroUI Native
-            </div>
-          </div>
-
-          <CodeExplorerPanel files={rnFiles} onExportBundle={handleExportBundle} />
-        </div>
-      </div>
-
-      {/* Mobile Source Code Sheet */}
-      <Popup
-        visible={mobileCodeOpen}
-        position="bottom"
-        onMaskClick={() => setMobileCodeOpen(false)}
-        bodyStyle={{ padding: 0, background: 'transparent' }}
-      >
-        <div className="h-[88dvh] max-h-[88dvh] bg-white dark:bg-slate-900 rounded-t-3xl flex flex-col overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              React Native (Expo) 源码
-            </span>
-            <button
-              type="button"
-              onClick={() => setMobileCodeOpen(false)}
-              aria-label="关闭源码窗口"
-              className="min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-auto p-3">
-            <CodeExplorerPanel
-              files={rnFiles}
-              onExportBundle={handleExportBundle}
-            />
-          </div>
-        </div>
-      </Popup>
 
       {/* BLE 设备选择面板（替代 Android 原生选择框） */}
       <Popup
@@ -1116,8 +896,6 @@ export default function App() {
           </div>
         </div>
       </Popup>
-
-      <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
