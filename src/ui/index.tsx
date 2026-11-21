@@ -5,6 +5,10 @@ import {
   Switch as AdmSwitch,
 } from 'antd-mobile';
 
+// 自研通用组件（非 antd-mobile 适配）
+export { Segmented } from './Segmented';
+export type { SegmentedOption } from './Segmented';
+
 /**
  * antd-mobile 适配层。
  *
