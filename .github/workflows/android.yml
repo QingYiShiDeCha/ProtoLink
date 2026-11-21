@@ -20,10 +20,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm 版本取自 package.json 的 packageManager 字段，
+      # 必须在 setup-node 之前装好，cache: pnpm 才能生效
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - uses: actions/setup-java@v4
         with:
@@ -31,13 +35,13 @@ jobs:
           java-version: 21
 
       - name: Install deps
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build web bundle
-        run: npm run build
+        run: pnpm run build
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: pnpm exec cap sync android
 
       # 让每个 tag 的包里带着自己的版本号，装到手机上能分辨是哪一版
       - name: Stamp version from tag
