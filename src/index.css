@@ -95,6 +95,17 @@
 }
 
 /*
+ * Slider 把手：antd 靠 text-align/line-height 居中把手图标，
+ * 但 Tailwind preflight 把 svg 设成 display:block，行内居中失效，
+ * 图标会偏到圆圈边角。改成 flex 居中。
+ */
+.adm-slider-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
  * Toast 紧凑化：antd-mobile 图标版 Toast 默认是 35px 内边距、150px 最小宽的
  * 大号 HUD 方块，观感笨重。压成小巧的底部提示条。
  * 无层级规则（antd 的样式无层级），且本文件在 antd-mobile 样式之后加载。

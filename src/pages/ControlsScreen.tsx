@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, Card, Input, Segmented, Switch } from "../ui";
-import { Popup, Space } from "antd-mobile";
+import { Popup, Slider, Space, Toast } from "antd-mobile";
 import {
   Activity,
   ArrowDown,
@@ -68,6 +68,29 @@ const RGB_PRESETS = [
   { label: "关灯", hex: "#000000" },
 ];
 
+interface RgbChannels {
+  r: number;
+  g: number;
+  b: number;
+}
+
+function hexToRgb(hex: string): RgbChannels {
+  const match = /^#?([0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!match) return { r: 13, g: 148, b: 136 };
+  const value = parseInt(match[1], 16);
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  };
+}
+
+function rgbToHex({ r, g, b }: RgbChannels): string {
+  return `#${[r, g, b]
+    .map((v) => Math.round(v).toString(16).padStart(2, "0"))
+    .join("")}`.toUpperCase();
+}
+
 export function ControlsScreen({
   activeTransport,
   connectionStatus,
@@ -111,6 +134,25 @@ export function ControlsScreen({
   const [mqttTopic, setMqttTopic] = useState("mcu/esp32/cmd/custom");
   const [boundRuleId, setBoundRuleId] = useState(rules[0]?.id ?? "");
   const [formError, setFormError] = useState("");
+
+  // RGB 取色弹层：正在编辑的控件 id + 三通道草稿值
+  const [rgbSheetId, setRgbSheetId] = useState<string | null>(null);
+  const [rgbDraft, setRgbDraft] = useState<RgbChannels>({ r: 13, g: 148, b: 136 });
+
+  const rgbWidget = widgets.find((w) => w.id === rgbSheetId) ?? null;
+  const rgbDraftHex = rgbToHex(rgbDraft);
+
+  const openRgbSheet = (widget: ControlWidget) => {
+    setRgbDraft(hexToRgb(widget.rgbValue || "#0D9488"));
+    setRgbSheetId(widget.id);
+  };
+
+  const applyRgbDraft = () => {
+    if (!rgbSheetId) return;
+    onTriggerRgb(rgbSheetId, rgbDraftHex);
+    Toast.show({ icon: "success", content: `已下发 ${rgbDraftHex}` });
+    setRgbSheetId(null);
+  };
 
   const handleOpenCreate = () => {
     setEditingId(null);
@@ -252,6 +294,11 @@ export function ControlsScreen({
       onAddWidget(payloadObj);
     }
 
+    Toast.show({
+      icon: "success",
+      content: editingId ? `控件「${trimmed}」已更新` : `控件「${trimmed}」已添加`,
+    });
+
     setName("");
     setEditingId(null);
     setFormError("");
@@ -364,7 +411,10 @@ export function ControlsScreen({
               </button>
               <button
                 type="button"
-                onClick={() => onDeleteWidget(widget.id)}
+                onClick={() => {
+                  onDeleteWidget(widget.id);
+                  Toast.show({ content: `控件「${widget.name}」已删除` });
+                }}
                 aria-label={`删除控件「${widget.name}」`}
                 className="min-w-[34px] min-h-[34px] rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-600 transition-colors"
               >
@@ -539,15 +589,15 @@ export function ControlsScreen({
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <input
-                      type="color"
-                      value={hexColor}
+                    <button
+                      type="button"
                       aria-label={`${widget.name}取色器`}
-                      onChange={(e) =>
-                        onTriggerRgb(widget.id, e.target.value.toUpperCase())
-                      }
-                      className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer"
-                    />
+                      onClick={() => openRgbSheet(widget)}
+                      className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-transform active:scale-95"
+                      style={{ backgroundColor: hexColor }}
+                    >
+                      <Palette className="w-4 h-4 text-white mix-blend-difference" />
+                    </button>
                     {actionButtons}
                   </div>
                 </div>
@@ -1118,6 +1168,110 @@ export function ControlsScreen({
             </Button>
           </div>
         </form>
+      </Popup>
+
+      {/* RGB 取色弹层（常驻挂载，原因同上：动画依赖 visible 的 false → true 变化） */}
+      <Popup
+        visible={rgbSheetId !== null}
+        position="bottom"
+        onMaskClick={() => setRgbSheetId(null)}
+        bodyStyle={{
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <div className="bg-white dark:bg-slate-900 rounded-t-3xl p-4 pb-6 flex flex-col gap-4">
+          <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Palette className="w-4 h-4 text-teal-600" />
+              <span>{rgbWidget ? `调色 · ${rgbWidget.name}` : "调色"}</span>
+            </h3>
+            <button
+              type="button"
+              onClick={() => setRgbSheetId(null)}
+              aria-label="关闭取色弹窗"
+              className="min-w-[40px] min-h-[40px] rounded-xl flex items-center justify-center text-slate-500"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* 实时颜色预览 */}
+          <div
+            className="h-20 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-end justify-end p-2"
+            style={{ backgroundColor: rgbDraftHex }}
+          >
+            <span className="text-[11px] font-mono font-semibold text-white mix-blend-difference">
+              {rgbDraftHex} · R{rgbDraft.r} G{rgbDraft.g} B{rgbDraft.b}
+            </span>
+          </div>
+
+          {/* 三通道滑杆，填充色分别跟随通道颜色 */}
+          {(
+            [
+              { key: "r", label: "红 R", color: "#ef4444" },
+              { key: "g", label: "绿 G", color: "#22c55e" },
+              { key: "b", label: "蓝 B", color: "#3b82f6" },
+            ] as const
+          ).map((channel) => (
+            <div key={channel.key} className="flex items-center gap-3">
+              <span className="w-12 shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {channel.label}
+              </span>
+              {/* Slider 无 width:100% 且轨道绝对定位，在 flex 行里会被压缩成 0 宽，
+                  必须包一层 flex-1 容器撑开 */}
+              <div className="flex-1 min-w-0">
+                <Slider
+                  value={rgbDraft[channel.key]}
+                  min={0}
+                  max={255}
+                  onChange={(value) =>
+                    setRgbDraft((prev) => ({ ...prev, [channel.key]: value }))
+                  }
+                  style={
+                    { "--adm-color-primary": channel.color } as React.CSSProperties
+                  }
+                />
+              </div>
+              <span className="w-9 shrink-0 text-right text-xs font-mono tabular-nums text-slate-600 dark:text-slate-300">
+                {rgbDraft[channel.key]}
+              </span>
+            </div>
+          ))}
+
+          <div className="grid grid-cols-5 gap-1.5">
+            {RGB_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => setRgbDraft(hexToRgb(preset.hex))}
+                className="min-h-[34px] rounded-lg text-[11px] font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2.5 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              onPress={() => setRgbSheetId(null)}
+              className="flex-1 min-h-[44px] rounded-xl text-sm font-medium"
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onPress={applyRgbDraft}
+              className="flex-[2] min-h-[44px] rounded-xl text-sm font-semibold"
+            >
+              确认下发
+            </Button>
+          </div>
+        </div>
       </Popup>
     </div>
   );
