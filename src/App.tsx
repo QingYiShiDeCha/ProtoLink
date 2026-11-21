@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import mqtt, { type MqttClient } from 'mqtt';
-import { List, Popup } from 'antd-mobile';
+import { List, Popup, Toast } from 'antd-mobile';
 import { X } from 'lucide-react';
 import type {
   BleConfig,
@@ -374,6 +374,7 @@ export default function App() {
         connectionStatus: 'disconnected',
         connectionMode: 'simulator',
       }));
+      Toast.show({ icon: 'success', content: '已断开连接' });
       return;
     }
 
@@ -389,6 +390,7 @@ export default function App() {
             connectionStatus: 'connected',
             connectionMode: 'live',
           }));
+          Toast.show({ icon: 'success', content: 'TCP 桥接已连接' });
         };
         ws.onmessage = (ev) => {
           const bytes =
@@ -423,6 +425,7 @@ export default function App() {
       connectionStatus: 'connected',
       connectionMode: 'simulator',
     }));
+    Toast.show({ icon: 'success', content: '已连接（内置单片机仿真）' });
   };
 
   const handleConnectLiveMqtt = () => {
@@ -454,6 +457,7 @@ export default function App() {
           connectionStatus: 'connected',
           connectionMode: 'live',
         }));
+        Toast.show({ icon: 'success', content: 'MQTT 已连接' });
       });
 
       client.on('message', (topic, payload) => {
@@ -551,6 +555,10 @@ export default function App() {
           deviceId: device.id,
         },
       }));
+      Toast.show({
+        icon: 'success',
+        content: `蓝牙已连接 ${device.name || 'BLE-Device'}`,
+      });
     } catch (err) {
       setState((prev) => ({ ...prev, connectionStatus: 'disconnected' }));
       setHardwareError(
@@ -599,6 +607,10 @@ export default function App() {
           deviceId: device.deviceId,
         },
       }));
+      Toast.show({
+        icon: 'success',
+        content: `蓝牙已连接 ${link.deviceLabel}`,
+      });
     } catch (err) {
       setState((prev) => ({ ...prev, connectionStatus: 'disconnected' }));
       setHardwareError(
@@ -832,6 +844,7 @@ export default function App() {
                   disconnectAllLiveLinks();
                   setHardwareError('');
                   setState(getInitialProtoLinkState());
+                  Toast.show({ content: '已恢复初始演示状态' });
                 }}
               />
 

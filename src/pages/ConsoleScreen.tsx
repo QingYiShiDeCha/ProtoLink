@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button, Card, Input, Segmented } from "../ui";
+import { Toast } from "antd-mobile";
 import { Send, Trash2 } from "lucide-react";
 import type {
   ChecksumType,
@@ -50,9 +51,11 @@ export function ConsoleScreen({
     const res = onSendRaw(draft, inputFormat, checksum);
     if (!res.ok) {
       setSendError(res.error);
+      Toast.show({ icon: "fail", content: res.error });
       return;
     }
     setSendError("");
+    Toast.show({ icon: "success", content: "报文已发送" });
   };
 
   return (
@@ -79,7 +82,10 @@ export function ConsoleScreen({
           <Button
             variant="ghost"
             isIconOnly
-            onPress={onClearLogs}
+            onPress={() => {
+              onClearLogs();
+              Toast.show({ content: "报文日志已清空" });
+            }}
             aria-label="清空报文日志"
             className="is-muted min-w-[38px] min-h-[38px] rounded-xl"
           >

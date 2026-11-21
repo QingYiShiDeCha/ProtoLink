@@ -95,6 +95,40 @@
 }
 
 /*
+ * Toast 紧凑化：antd-mobile 图标版 Toast 默认是 35px 内边距、150px 最小宽的
+ * 大号 HUD 方块，观感笨重。压成小巧的底部提示条。
+ * 无层级规则（antd 的样式无层级），且本文件在 antd-mobile 样式之后加载。
+ */
+.adm-toast-mask .adm-toast-main {
+  border-radius: 12px;
+  font-size: 13px;
+  max-width: 260px;
+}
+
+.adm-toast-mask .adm-toast-main-icon {
+  padding: 12px 16px;
+  min-width: 0;
+  /* 图标版默认竖向堆叠（图标在上、文字在下），压成横向紧凑提示条。
+   * 必须 inline-flex：flex 会变成块级，父级靠 text-align:center 的
+   * 水平居中就失效了（整体贴左）；inline-flex 两者兼得。 */
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-toast-mask .adm-toast-main-icon .adm-toast-icon {
+  font-size: 24px;
+  margin-bottom: 0;
+  /* antd 靠 text-align:center 居中图标 svg，preflight 的 svg{display:block}
+   * 会让块级 svg 贴左（实测左间隙 0px / 右间隙 41px）。flex 居中修复，
+   * 与 .adm-slider-thumb 同一类问题。 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
  * 按钮外观覆盖：antd 把 color/background/border 直接声明在无层级的
  * .adm-button 上，Tailwind 颜色工具类在 @layer 里永远赢不了它，
  * 所以颜色必须走这里——通过 antd 按钮自己的 CSS 变量（--background-color /

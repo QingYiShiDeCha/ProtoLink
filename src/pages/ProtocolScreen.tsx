@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Card, Input, Segmented, Switch } from '../ui';
-import { Popup } from 'antd-mobile';
+import { Popup, Toast } from 'antd-mobile';
 import { FileCode, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
 import type {
   ChecksumType,
@@ -129,6 +129,11 @@ export function ProtocolScreen({
     } else {
       onAddRule(payload);
     }
+
+    Toast.show({
+      icon: 'success',
+      content: editingRuleId ? `规则「${trimmed}」已更新` : `规则「${trimmed}」已添加`,
+    });
 
     setName('');
     setEditingRuleId(null);
@@ -281,7 +286,10 @@ export function ProtocolScreen({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onDeleteRule(rule.id)}
+                    onClick={() => {
+                      onDeleteRule(rule.id);
+                      Toast.show({ content: `规则「${rule.name}」已删除` });
+                    }}
                     aria-label={`删除规则「${rule.name}」`}
                     className="min-w-[34px] min-h-[34px] rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-600"
                   >
