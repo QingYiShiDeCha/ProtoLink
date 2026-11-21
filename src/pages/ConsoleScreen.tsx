@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Button, Card, Input } from "../../ui";
+import { Button, Card, Input } from "../ui";
 import { Send, Trash2 } from "lucide-react";
 import type {
   ChecksumType,
   PacketLogEntry,
   PayloadFormat,
   TransportType,
-} from "../../types/app";
+} from "../types/app";
 
 interface ConsoleScreenProps {
   activeTransport: TransportType;

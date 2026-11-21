@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Input, Switch } from '../../ui';
+import { Button, Card, Input, Switch } from '../ui';
 import { Popup } from 'antd-mobile';
 import { FileCode, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
 import type {
@@ -7,7 +7,7 @@ import type {
   ParsedProtocolMatch,
   ProtocolParseMode,
   ProtocolRule,
-} from '../../types/app';
+} from '../types/app';
 
 interface ProtocolScreenProps {
   rules: ProtocolRule[];

@@ -16,7 +16,6 @@ import type {
   PollingConfig,
   ProtoLinkState,
   ProtocolRule,
-  TabRoute,
   TcpConfig,
   TransportType,
 } from './types/app';
@@ -31,7 +30,7 @@ import {
   simulateMcuResponse,
   utf8ToBytes,
 } from './utils/protocolEngine';
-import { MobileAppShell } from './components/mobile/MobileAppShell';
+import { MobileAppShell } from './layouts/MobileAppShell';
 import {
   connectNativeBleTo,
   isNativePlatform,
@@ -113,7 +112,6 @@ function loadSavedState(): ProtoLinkState {
 
 export default function App() {
   const [state, setState] = useState<ProtoLinkState>(loadSavedState);
-  const [activeTab, setActiveTab] = useState<TabRoute>('controls');
   const [hardwareError, setHardwareError] = useState('');
 
   const liveBleCharRef = useRef<WebBluetoothCharacteristicLike | null>(null);
@@ -742,9 +740,7 @@ export default function App() {
     <div className="h-[100dvh] w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
       <MobileAppShell
                 state={state}
-                activeTab={activeTab}
                 hardwareError={hardwareError}
-                onChangeTab={setActiveTab}
                 onChangeTransport={(transport: TransportType) => {
                   setHardwareError('');
                   setState((prev) => ({ ...prev, activeTransport: transport }));

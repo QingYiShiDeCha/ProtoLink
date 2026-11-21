@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Card, Input, Switch } from "../../ui";
+import { Button, Card, Input, Switch } from "../ui";
 import { Popup, Space } from "antd-mobile";
 import {
   Activity,
@@ -31,8 +31,8 @@ import type {
   TransportType,
   VirtualMcuState,
   WidgetKind,
-} from "../../types/app";
-import { buildOutgoingPayload } from "../../utils/protocolEngine";
+} from "../types/app";
+import { buildOutgoingPayload } from "../utils/protocolEngine";
 
 interface ControlsScreenProps {
   activeTransport: TransportType;

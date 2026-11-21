@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Button, Card, Input, Switch } from "../../ui";
+import { Button, Card, Input, Switch } from "../ui";
 import { Segmented } from "antd-mobile";
 import {
   Bluetooth,
@@ -21,7 +21,7 @@ import type {
   PlatformStyle,
   TcpConfig,
   TransportType,
-} from "../../types/app";
+} from "../types/app";
 
 interface ConnectScreenProps {
   activeTransport: TransportType;

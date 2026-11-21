@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Cable, FileCode, SlidersHorizontal, TerminalSquare } from 'lucide-react';
 import { TabBar } from 'antd-mobile';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router';
 import type {
   BleConfig,
   ChecksumType,
@@ -16,17 +17,15 @@ import type {
   TabRoute,
   TcpConfig,
   TransportType,
-} from '../../types/app';
-import { ConnectScreen } from './ConnectScreen';
-import { ControlsScreen } from './ControlsScreen';
-import { ConsoleScreen } from './ConsoleScreen';
-import { ProtocolScreen } from './ProtocolScreen';
+} from '../types/app';
+import { ConnectScreen } from '../pages/ConnectScreen';
+import { ControlsScreen } from '../pages/ControlsScreen';
+import { ConsoleScreen } from '../pages/ConsoleScreen';
+import { ProtocolScreen } from '../pages/ProtocolScreen';
 
 interface MobileAppShellProps {
   state: ProtoLinkState;
-  activeTab: TabRoute;
   hardwareError: string;
-  onChangeTab: (tab: TabRoute) => void;
   onChangeTransport: (transport: TransportType) => void;
   onToggleConnect: () => void;
   onScanWebBluetooth: () => void;
@@ -85,9 +84,7 @@ const TAB_TITLES: Record<TabRoute, string> = {
 
 export function MobileAppShell({
   state,
-  activeTab,
   hardwareError,
-  onChangeTab,
   onChangeTransport,
   onToggleConnect,
   onScanWebBluetooth,
@@ -118,6 +115,11 @@ export function MobileAppShell({
   onOpenMobileCodeSheet,
 }: MobileAppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 当前 tab 由 URL 派生：/connect、/controls、/console、/protocol
+  const activeTab = (location.pathname.split('/')[1] || 'controls') as TabRoute;
 
   useEffect(() => {
     if (mainRef.current) {
@@ -164,81 +166,98 @@ export function MobileAppShell({
           </span>
         </header>
 
-        {/* Scrollable Screen Viewport */}
+        {/* Scrollable Screen Viewport（由 react-router 驱动） */}
         <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-4 select-text">
-          {activeTab === 'connect' && (
-            <ConnectScreen
-              activeTransport={state.activeTransport}
-              connectionStatus={state.connectionStatus}
-              connectionMode={state.connectionMode}
-              ble={state.ble}
-              mqtt={state.mqtt}
-              tcp={state.tcp}
-              platform={state.platform}
-              darkMode={state.darkMode}
-              hardwareError={hardwareError}
-              onChangeTransport={onChangeTransport}
-              onToggleConnect={onToggleConnect}
-              onScanWebBluetooth={onScanWebBluetooth}
-              onConnectLiveMqtt={onConnectLiveMqtt}
-              onUpdateBle={onUpdateBle}
-              onUpdateMqtt={onUpdateMqtt}
-              onUpdateTcp={onUpdateTcp}
-              onChangePlatform={onChangePlatform}
-              onToggleDarkMode={onToggleDarkMode}
-              onResetDemo={onResetDemo}
-              onOpenMobileCodeSheet={onOpenMobileCodeSheet}
+          <Routes>
+            <Route
+              path="/connect"
+              element={
+                <ConnectScreen
+                  activeTransport={state.activeTransport}
+                  connectionStatus={state.connectionStatus}
+                  connectionMode={state.connectionMode}
+                  ble={state.ble}
+                  mqtt={state.mqtt}
+                  tcp={state.tcp}
+                  platform={state.platform}
+                  darkMode={state.darkMode}
+                  hardwareError={hardwareError}
+                  onChangeTransport={onChangeTransport}
+                  onToggleConnect={onToggleConnect}
+                  onScanWebBluetooth={onScanWebBluetooth}
+                  onConnectLiveMqtt={onConnectLiveMqtt}
+                  onUpdateBle={onUpdateBle}
+                  onUpdateMqtt={onUpdateMqtt}
+                  onUpdateTcp={onUpdateTcp}
+                  onChangePlatform={onChangePlatform}
+                  onToggleDarkMode={onToggleDarkMode}
+                  onResetDemo={onResetDemo}
+                  onOpenMobileCodeSheet={onOpenMobileCodeSheet}
+                />
+              }
             />
-          )}
 
-          {activeTab === 'controls' && (
-            <ControlsScreen
-              activeTransport={state.activeTransport}
-              connectionStatus={state.connectionStatus}
-              widgets={state.widgets}
-              polling={state.polling}
-              rules={state.rules}
-              virtualMcu={state.virtualMcu}
-              onSwitchTransport={onChangeTransport}
-              onUpdatePolling={onUpdatePolling}
-              onTriggerSwitch={onTriggerSwitch}
-              onTriggerSlider={onTriggerSlider}
-              onTriggerRgb={onTriggerRgb}
-              onTriggerDpad={onTriggerDpad}
-              onTriggerMode={onTriggerMode}
-              onTriggerButton={onTriggerButton}
-              onAddWidget={onAddWidget}
-              onEditWidget={onEditWidget}
-              onDeleteWidget={onDeleteWidget}
+            <Route
+              path="/controls"
+              element={
+                <ControlsScreen
+                  activeTransport={state.activeTransport}
+                  connectionStatus={state.connectionStatus}
+                  widgets={state.widgets}
+                  polling={state.polling}
+                  rules={state.rules}
+                  virtualMcu={state.virtualMcu}
+                  onSwitchTransport={onChangeTransport}
+                  onUpdatePolling={onUpdatePolling}
+                  onTriggerSwitch={onTriggerSwitch}
+                  onTriggerSlider={onTriggerSlider}
+                  onTriggerRgb={onTriggerRgb}
+                  onTriggerDpad={onTriggerDpad}
+                  onTriggerMode={onTriggerMode}
+                  onTriggerButton={onTriggerButton}
+                  onAddWidget={onAddWidget}
+                  onEditWidget={onEditWidget}
+                  onDeleteWidget={onDeleteWidget}
+                />
+              }
             />
-          )}
 
-          {activeTab === 'console' && (
-            <ConsoleScreen
-              activeTransport={state.activeTransport}
-              logs={state.logs}
-              onSendRaw={onSendRaw}
-              onClearLogs={onClearLogs}
+            <Route
+              path="/console"
+              element={
+                <ConsoleScreen
+                  activeTransport={state.activeTransport}
+                  logs={state.logs}
+                  onSendRaw={onSendRaw}
+                  onClearLogs={onClearLogs}
+                />
+              }
             />
-          )}
 
-          {activeTab === 'protocol' && (
-            <ProtocolScreen
-              rules={state.rules}
-              onToggleRule={onToggleRule}
-              onAddRule={onAddRule}
-              onEditRule={onEditRule}
-              onDeleteRule={onDeleteRule}
-              onSimulateIncoming={onSimulateIncoming}
+            <Route
+              path="/protocol"
+              element={
+                <ProtocolScreen
+                  rules={state.rules}
+                  onToggleRule={onToggleRule}
+                  onAddRule={onAddRule}
+                  onEditRule={onEditRule}
+                  onDeleteRule={onDeleteRule}
+                  onSimulateIncoming={onSimulateIncoming}
+                />
+              }
             />
-          )}
+
+            <Route path="/" element={<Navigate to="/controls" replace />} />
+            <Route path="*" element={<Navigate to="/controls" replace />} />
+          </Routes>
         </main>
 
         {/* 底部导航：antd-mobile TabBar */}
         <div className="shrink-0 safe-bottom bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40">
           <TabBar
             activeKey={activeTab}
-            onChange={(key) => onChangeTab(key as TabRoute)}
+            onChange={(key) => navigate(`/${key}`)}
             safeArea={false}
           >
             {TAB_ITEMS.map((tab) => {
